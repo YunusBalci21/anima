@@ -21,7 +21,7 @@ ANIMA is a groundbreaking artificial life simulation where autonomous AI agents 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/anima.git
+git clone https://github.com/yunusbalci21/anima.git
 cd anima
 
 # Create virtual environment (recommended)
