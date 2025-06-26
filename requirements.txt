@@ -1,0 +1,39 @@
+# ANIMA - The Emergent Self Engine
+# Requirements file
+
+# Core dependencies
+numpy>=1.24.0
+pygame>=2.5.0
+chromadb>=0.4.0
+
+# DeepSeek Integration
+transformers>=4.36.0
+torch>=2.0.0  # Use torch==2.0.0+cu118 for CUDA 11.8
+accelerate>=0.25.0  # For efficient model loading
+sentencepiece>=0.1.99  # For tokenization
+protobuf>=3.20.0  # For model serialization
+
+# Data processing
+pandas>=2.0.0
+
+# Async support
+asyncio-mqtt>=0.16.0
+
+# Logging and monitoring
+colorlog>=6.7.0
+
+# Storage and persistence
+# sqlite3  # Usually comes with Python
+
+# Visualization dependencies
+matplotlib>=3.7.0  # For additional plotting if needed
+plotly>=5.0.0  # For interactive visualizations
+
+# Testing (optional)
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+
+# Development tools (optional)
+black>=23.0.0  # Code formatter
+flake8>=6.0.0  # Linter
+mypy>=1.0.0  # Type checker
