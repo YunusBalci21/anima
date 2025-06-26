@@ -1,14 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>ANIMA – The Emergent Self Engine</title>
-  <!-- Socket.IO client -->
-  <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"
-          integrity="sha384-XUc4Rfv04jb6Yf3ngK0j3E1k2dF7s6v6/UVqUZXe5sG4P4RklVftE08YjVZ5d5gf"
-          crossorigin="anonymous"></script>
-  <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANIMA - The Emergent Self Engine</title>
+    <style>
         * {
             margin: 0;
             padding: 0;
@@ -44,7 +40,7 @@
 
         /* Sidebar */
         .sidebar {
-            width: 350px;
+            width: 400px;
             background: rgba(20, 20, 30, 0.95);
             padding: 30px;
             overflow-y: auto;
@@ -68,22 +64,6 @@
             font-size: 14px;
             margin-bottom: 40px;
             font-style: italic;
-        }
-
-        /* World canvas */
-        .world-container {
-            flex: 1;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle at center, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
-        }
-
-        #world-canvas {
-            border: 2px solid rgba(102, 126, 234, 0.3);
-            border-radius: 8px;
-            box-shadow: 0 0 40px rgba(102, 126, 234, 0.2);
         }
 
         /* Stats */
@@ -110,6 +90,37 @@
             font-weight: bold;
             color: #fff;
         }
+
+        /* Consciousness indicators */
+        .consciousness-stats {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .consciousness-bar {
+            display: flex;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .consciousness-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .unawakened { background: #444; }
+        .awakened { background: #667eea; }
+        .enlightened { background: #ffd700; }
 
         /* Controls */
         .controls {
@@ -160,20 +171,13 @@
             background: rgba(255, 255, 255, 0.15);
         }
 
-        /* Experiment selector */
-        .experiment-select {
-            width: 100%;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
-            font-size: 14px;
-            margin-bottom: 15px;
+        .btn-group {
+            display: flex;
+            gap: 10px;
         }
 
-        .experiment-select option {
-            background: #1a1a2e;
+        .btn-group .btn {
+            flex: 1;
         }
 
         /* Speed control */
@@ -207,9 +211,31 @@
             border-left: 3px solid #667eea;
         }
 
+        .event-item.significant {
+            border-left-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+
         .event-time {
             color: #666;
             margin-right: 8px;
+        }
+
+        /* World container */
+        .world-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+        }
+
+        #world-canvas {
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(102, 126, 234, 0.2);
+            cursor: crosshair;
         }
 
         /* Info panel */
@@ -220,10 +246,13 @@
             background: rgba(20, 20, 30, 0.95);
             padding: 20px;
             border-radius: 12px;
-            min-width: 250px;
+            min-width: 300px;
+            max-width: 400px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             display: none;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         .info-panel.active {
@@ -240,7 +269,40 @@
             margin-bottom: 8px;
         }
 
-        /* Emotional color legend */
+        .consciousness-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .consciousness-badge.level-0 { background: #444; }
+        .consciousness-badge.level-1 { background: #667eea; }
+        .consciousness-badge.level-2 { background: #ffd700; color: #000; }
+
+        /* Creative works display */
+        .creative-works {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .work-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .work-type {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* Legend */
         .legend {
             position: absolute;
             bottom: 20px;
@@ -265,7 +327,88 @@
             margin-right: 8px;
         }
 
-        /* Loading screen */
+        /* Fork indicator */
+        .fork-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(20, 20, 30, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+
+        .fork-indicator.active {
+            display: block;
+        }
+
+        /* Narrative modal */
+        .narrative-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .narrative-modal.active {
+            display: flex;
+        }
+
+        .narrative-content {
+            background: rgba(20, 20, 30, 0.95);
+            padding: 40px;
+            border-radius: 16px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+        }
+
+        .narrative-content h2 {
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .narrative-text {
+            line-height: 1.8;
+            font-size: 16px;
+            white-space: pre-wrap;
+        }
+
+        .chapter {
+            margin-bottom: 30px;
+        }
+
+        .chapter-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #764ba2;
+            margin-bottom: 10px;
+        }
+
+        .close-btn {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #fff;
+        }
+
+        /* Loading */
         .loading {
             position: fixed;
             top: 0;
@@ -276,7 +419,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 3000;
         }
 
         .loading-content {
@@ -297,56 +440,65 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Narrative modal */
-        .narrative-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
+        /* Connection status */
+        .connection-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
         }
 
-        .narrative-modal.active {
-            display: flex;
+        .connection-status.connected {
+            background: #4caf50;
+            color: white;
         }
 
-        .narrative-content {
-            background: rgba(20, 20, 30, 0.95);
-            padding: 40px;
-            border-radius: 16px;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .connection-status.disconnected {
+            background: #f44336;
+            color: white;
         }
 
-        .narrative-content h2 {
-            margin-bottom: 20px;
-            color: #667eea;
+        /* Sacred site glow */
+        @keyframes sacred-glow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
         }
 
-        .narrative-text {
-            line-height: 1.8;
-            font-size: 16px;
-            white-space: pre-wrap;
+        .sacred-site {
+            animation: sacred-glow 2s infinite;
         }
 
-        .close-btn {
-            float: right;
-            font-size: 24px;
-            cursor: pointer;
-            color: #666;
-            transition: color 0.3s;
+        /* Tooltips */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
         }
 
-        .close-btn:hover {
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: rgba(0, 0, 0, 0.9);
             color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
         }
     </style>
 </head>
@@ -368,6 +520,10 @@
         <div class="sidebar">
             <h1 class="logo">ANIMA</h1>
             <p class="tagline">The Emergent Self Engine</p>
+
+            <div class="connection-status disconnected" id="connection-status">
+                Disconnected
+            </div>
 
             <!-- Stats -->
             <div class="stats">
@@ -391,28 +547,57 @@
                     <span class="stat-label">Myths Created</span>
                     <span class="stat-value" id="myths">0</span>
                 </div>
+                <div class="stat-item">
+                    <span class="stat-label">Creative Works</span>
+                    <span class="stat-value" id="creative-works">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Parallel Universes</span>
+                    <span class="stat-value" id="parallel-universes">0</span>
+                </div>
+            </div>
+
+            <!-- Consciousness distribution -->
+            <div class="consciousness-stats">
+                <h3>Consciousness Evolution</h3>
+                <div class="consciousness-bar" id="consciousness-bar">
+                    <div class="consciousness-segment unawakened" id="unawakened-bar">
+                        <span id="unawakened-count">0</span>
+                    </div>
+                    <div class="consciousness-segment awakened" id="awakened-bar">
+                        <span id="awakened-count">0</span>
+                    </div>
+                    <div class="consciousness-segment enlightened" id="enlightened-bar">
+                        <span id="enlightened-count">0</span>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 11px;">
+                    <span>Unawakened</span>
+                    <span>Awakened</span>
+                    <span>Enlightened</span>
+                </div>
             </div>
 
             <!-- Controls -->
             <div class="controls">
                 <div class="control-group">
                     <label class="control-label">Experiment</label>
-                    <select class="experiment-select" id="experiment-select">
+                    <select class="btn secondary" id="experiment-select" style="width: 100%; text-align: left;">
                         <option value="genesis">Genesis - The First Awakening</option>
                         <option value="scarcity">Scarcity - The Hungry World</option>
                         <option value="abundance">Abundance - The Garden Paradise</option>
-                        <option value="isolation">Isolation - The Scattered Tribes</option>
-                        <option value="pressure">Pressure - The Crucible</option>
                         <option value="enlightenment">Enlightenment - The Awakening</option>
                         <option value="babel">Babel - The Tower of Tongues</option>
-                        <option value="harmony">Harmony - The Collective</option>
-                        <option value="cycles">Cycles - The Eternal Return</option>
-                        <option value="singularity">Singularity - The Convergence</option>
                     </select>
                 </div>
 
-                <button class="btn" id="start-btn">Start Simulation</button>
-                <button class="btn secondary" id="pause-btn">Pause</button>
+                <button class="btn" id="create-btn">Create New World</button>
+
+                <div class="btn-group">
+                    <button class="btn secondary" id="start-btn">Start</button>
+                    <button class="btn secondary" id="pause-btn">Pause</button>
+                    <button class="btn secondary" id="stop-btn">Stop</button>
+                </div>
 
                 <div class="control-group">
                     <label class="control-label">Speed: <span id="speed-label">1x</span></label>
@@ -420,7 +605,10 @@
                            min="0.1" max="5" step="0.1" value="1">
                 </div>
 
-                <button class="btn secondary" id="generate-narrative">Generate Narrative</button>
+                <div class="btn-group">
+                    <button class="btn secondary" id="generate-narrative">Generate Narrative</button>
+                    <button class="btn secondary" id="create-fork">Fork Universe</button>
+                </div>
             </div>
 
             <!-- Event log -->
@@ -434,22 +622,38 @@
         <div class="world-container">
             <canvas id="world-canvas"></canvas>
 
+            <!-- Fork indicator -->
+            <div class="fork-indicator" id="fork-indicator">
+                <h4>Parallel Universes</h4>
+                <div id="fork-list"></div>
+            </div>
+
             <!-- Agent info panel -->
             <div class="info-panel" id="info-panel">
                 <span class="close-btn" onclick="closeInfoPanel()">&times;</span>
                 <div class="agent-info">
-                    <h3 id="agent-name">Agent Name</h3>
+                    <h3>
+                        <span id="agent-name">Agent Name</span>
+                        <span class="consciousness-badge" id="consciousness-badge"></span>
+                    </h3>
                     <div class="agent-detail">Age: <span id="agent-age">0</span> cycles</div>
                     <div class="agent-detail">Energy: <span id="agent-energy">0</span></div>
                     <div class="agent-detail">Emotion: <span id="agent-emotion">neutral</span></div>
-                    <div class="agent-detail">Symbols: <span id="agent-symbols">0</span></div>
+                    <div class="agent-detail">Symbols Known: <span id="agent-symbols">0</span></div>
                     <div class="agent-detail">Relationships: <span id="agent-relationships">0</span></div>
                     <div class="agent-detail">Beliefs: <span id="agent-beliefs">none</span></div>
+                    <div class="agent-detail">Questions: <span id="agent-questions">none</span></div>
+
+                    <div class="creative-works" id="agent-creative-works">
+                        <h4>Creative Works</h4>
+                        <div id="works-list"></div>
+                    </div>
                 </div>
             </div>
 
             <!-- Legend -->
             <div class="legend">
+                <h4 style="margin-bottom: 10px;">Emotional States</h4>
                 <div class="legend-item">
                     <div class="legend-color" style="background: #64c864;"></div>
                     <span>Happy</span>
@@ -470,6 +674,10 @@
                     <div class="legend-color" style="background: #ff96c8;"></div>
                     <span>Loving</span>
                 </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffd700;"></div>
+                    <span>Transcendent</span>
+                </div>
             </div>
         </div>
     </div>
@@ -478,16 +686,54 @@
     <div class="narrative-modal" id="narrative-modal">
         <div class="narrative-content">
             <span class="close-btn" onclick="closeNarrativeModal()">&times;</span>
-            <h2 id="narrative-title">The First Awakening</h2>
-            <div class="narrative-text" id="narrative-text"></div>
+            <h2 id="narrative-title">The Story Unfolds</h2>
+            <div id="narrative-chapters"></div>
         </div>
     </div>
 
     <script>
-        // Particle background
+        // Configuration
+        const SERVER_URL = window.location.origin;
+        const WS_URL = `ws://${window.location.host}/ws`;
+
+        // Global state
+        let ws = null;
+        let worldState = null;
+        let selectedAgent = null;
+        let isPaused = false;
+        let experiments = {};
+
+        // Canvas setup
+        const worldCanvas = document.getElementById('world-canvas');
+        const ctx = worldCanvas.getContext('2d');
         const particleCanvas = document.getElementById('particle-canvas');
         const particleCtx = particleCanvas.getContext('2d');
 
+        // Emotion colors (matching server)
+        const emotionColors = {
+            neutral: '#646464',
+            happy: '#64c864',
+            angry: '#c83232',
+            fearful: '#9664c8',
+            curious: '#6496c8',
+            lonely: '#505096',
+            loving: '#ff96c8',
+            confused: '#969664',
+            hopeful: '#c8c864',
+            desperate: '#643232',
+            transcendent: '#ffd700'
+        };
+
+        // Resource colors
+        const resourceColors = {
+            food: '#64c864',
+            water: '#6496ff',
+            shelter: '#966432',
+            light: '#ffff96',
+            knowledge: '#c864ff'
+        };
+
+        // Initialize particle background
         particleCanvas.width = window.innerWidth;
         particleCanvas.height = window.innerHeight;
 
@@ -560,175 +806,336 @@
 
         animateParticles();
 
-        // World simulation
-        const worldCanvas = document.getElementById('world-canvas');
-        const ctx = worldCanvas.getContext('2d');
+        // WebSocket connection
+        function connectWebSocket() {
+            ws = new WebSocket(WS_URL);
 
-        const WORLD_SIZE = 30;
-        const CELL_SIZE = 15;
+            ws.onopen = () => {
+                console.log('Connected to ANIMA server');
+                updateConnectionStatus(true);
 
-        worldCanvas.width = WORLD_SIZE * CELL_SIZE;
-        worldCanvas.height = WORLD_SIZE * CELL_SIZE;
+                // Send ping every 30 seconds to keep connection alive
+                setInterval(() => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send('ping');
+                    }
+                }, 30000);
+            };
 
-        let simulation = null;
-        let animationId = null;
-        let isPaused = false;
-        let speed = 1;
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleServerMessage(data);
+            };
 
-        // Emotion colors
-        const emotionColors = {
-            neutral: '#646464',
-            happy: '#64c864',
-            angry: '#c83232',
-            fearful: '#9664c8',
-            curious: '#6496c8',
-            lonely: '#505096',
-            loving: '#ff96c8',
-            confused: '#969664',
-            hopeful: '#c8c864',
-            desperate: '#643232'
-        };
+            ws.onclose = () => {
+                console.log('Disconnected from server');
+                updateConnectionStatus(false);
 
-        // Resource colors
-        const resourceColors = {
-            food: '#64c864',
-            water: '#6496ff',
-            shelter: '#966432',
-            light: '#ffff96',
-            knowledge: '#c864ff'
-        };
+                // Try to reconnect after 3 seconds
+                setTimeout(connectWebSocket, 3000);
+            };
 
-        // Mock simulation data for demo
-        let mockWorld = {
-            time: 0,
-            agents: [],
-            resources: [],
-            stats: {
-                population: 0,
-                cultures: 0,
-                languages: 0,
-                myths: 0
-            },
-            events: []
-        };
-
-        // Initialize mock agents
-        function initializeMockWorld() {
-            mockWorld.agents = [];
-            for (let i = 0; i < 15; i++) {
-                mockWorld.agents.push({
-                    id: `agent_${i}`,
-                    name: generateAgentName(),
-                    position: {
-                        x: Math.floor(Math.random() * WORLD_SIZE),
-                        y: Math.floor(Math.random() * WORLD_SIZE)
-                    },
-                    emotion: 'neutral',
-                    energy: 1.0,
-                    age: 0,
-                    symbols: 0,
-                    relationships: 0,
-                    beliefs: []
-                });
-            }
-
-            // Initialize resources
-            for (let i = 0; i < 30; i++) {
-                mockWorld.resources.push({
-                    type: ['food', 'water', 'shelter', 'light', 'knowledge'][Math.floor(Math.random() * 5)],
-                    position: {
-                        x: Math.floor(Math.random() * WORLD_SIZE),
-                        y: Math.floor(Math.random() * WORLD_SIZE)
-                    },
-                    amount: Math.random()
-                });
-            }
-
-            mockWorld.stats.population = mockWorld.agents.length;
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
         }
 
-        function generateAgentName() {
-            const syllables = ['ka', 'ra', 'mi', 'to', 'na', 'be', 'lu', 'so', 'chi', 'wa'];
-            let name = '';
-            const length = 2 + Math.floor(Math.random() * 2);
-            for (let i = 0; i < length; i++) {
-                name += syllables[Math.floor(Math.random() * syllables.length)];
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connection-status');
+            if (connected) {
+                status.textContent = 'Connected';
+                status.className = 'connection-status connected';
+            } else {
+                status.textContent = 'Disconnected';
+                status.className = 'connection-status disconnected';
             }
-            return name.charAt(0).toUpperCase() + name.slice(1);
         }
 
-        // Update simulation
-        function updateSimulation() {
-            if (isPaused) return;
+        function handleServerMessage(data) {
+            if (data.type === 'state') {
+                worldState = data.data;
+                updateUI();
+                drawWorld();
+            } else if (data.type === 'narrative') {
+                displayNarrative(data.story);
+            } else if (data.type === 'event') {
+                addEvent(data.event);
+            }
+        }
 
-            mockWorld.time += 1;
+        // API calls
+        async function fetchExperiments() {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/experiments`);
+                experiments = await response.json();
 
-            // Update agents
-            mockWorld.agents.forEach(agent => {
-                // Random movement
-                if (Math.random() < 0.3) {
-                    const dx = Math.floor(Math.random() * 3) - 1;
-                    const dy = Math.floor(Math.random() * 3) - 1;
-                    agent.position.x = Math.max(0, Math.min(WORLD_SIZE - 1, agent.position.x + dx));
-                    agent.position.y = Math.max(0, Math.min(WORLD_SIZE - 1, agent.position.y + dy));
-                }
+                // Update experiment selector
+                const select = document.getElementById('experiment-select');
+                select.innerHTML = '';
 
-                // Update emotion
-                if (Math.random() < 0.1) {
-                    const emotions = Object.keys(emotionColors);
-                    agent.emotion = emotions[Math.floor(Math.random() * emotions.length)];
-                }
-
-                // Age
-                agent.age += 1;
-
-                // Energy decay
-                agent.energy = Math.max(0, agent.energy - 0.001);
-
-                // Language evolution
-                if (Math.random() < 0.02) {
-                    agent.symbols += 1;
-                    mockWorld.stats.languages += 1;
-                    addEvent(`${agent.name} created a new symbol`);
-                }
-
-                // Relationship formation
-                if (Math.random() < 0.01) {
-                    agent.relationships += 1;
-                }
-            });
-
-            // Resource regeneration
-            if (Math.random() < 0.05) {
-                mockWorld.resources.push({
-                    type: ['food', 'water', 'shelter', 'light', 'knowledge'][Math.floor(Math.random() * 5)],
-                    position: {
-                        x: Math.floor(Math.random() * WORLD_SIZE),
-                        y: Math.floor(Math.random() * WORLD_SIZE)
-                    },
-                    amount: Math.random()
+                Object.entries(experiments).forEach(([key, exp]) => {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = exp.name;
+                    select.appendChild(option);
                 });
+            } catch (error) {
+                console.error('Failed to fetch experiments:', error);
             }
-
-            // Cultural emergence
-            if (mockWorld.time % 200 === 0 && Math.random() < 0.5) {
-                mockWorld.stats.cultures += 1;
-                addEvent(`New culture emerged: Practice_${mockWorld.stats.cultures}`);
-            }
-
-            // Myth creation
-            if (mockWorld.time % 300 === 0 && Math.random() < 0.3) {
-                mockWorld.stats.myths += 1;
-                const creator = mockWorld.agents[Math.floor(Math.random() * mockWorld.agents.length)];
-                addEvent(`${creator.name} created a myth about the origin of existence`);
-            }
-
-            // Update UI
-            updateStats();
         }
 
-        // Draw world
+        async function createSimulation() {
+            const experimentKey = document.getElementById('experiment-select').value;
+            const config = experiments[experimentKey]?.config || {
+                world_size: [50, 50],
+                initial_agents: 20,
+                resource_spawn_rate: 0.1,
+                use_llm: true
+            };
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/simulation/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    addEvent({ type: 'system', data: { message: 'New world created' } });
+                }
+            } catch (error) {
+                console.error('Failed to create simulation:', error);
+            }
+        }
+
+        async function startSimulation() {
+            try {
+                await fetch(`${SERVER_URL}/api/simulation/start`, { method: 'POST' });
+                isPaused = false;
+                updateButtons();
+            } catch (error) {
+                console.error('Failed to start simulation:', error);
+            }
+        }
+
+        async function pauseSimulation() {
+            try {
+                await fetch(`${SERVER_URL}/api/simulation/pause`, { method: 'POST' });
+                isPaused = true;
+                updateButtons();
+            } catch (error) {
+                console.error('Failed to pause simulation:', error);
+            }
+        }
+
+        async function stopSimulation() {
+            try {
+                await fetch(`${SERVER_URL}/api/simulation/stop`, { method: 'POST' });
+                updateButtons();
+            } catch (error) {
+                console.error('Failed to stop simulation:', error);
+            }
+        }
+
+        async function setSpeed(multiplier) {
+            try {
+                await fetch(`${SERVER_URL}/api/simulation/speed`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ multiplier })
+                });
+            } catch (error) {
+                console.error('Failed to set speed:', error);
+            }
+        }
+
+        async function generateNarrative() {
+            // Get available styles
+            try {
+                const stylesResponse = await fetch(`${SERVER_URL}/api/narrative/styles`);
+                const stylesData = await stylesResponse.json();
+                const styles = stylesData.styles.map(s => s.name);
+
+                // Choose random style
+                const style = styles[Math.floor(Math.random() * styles.length)];
+
+                const response = await fetch(`${SERVER_URL}/api/narrative/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ style })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    displayNarrative(result.narrative);
+                }
+            } catch (error) {
+                console.error('Failed to generate narrative:', error);
+            }
+        }
+
+        async function createFork() {
+            const forkName = prompt('Enter name for the parallel universe:');
+            if (!forkName) return;
+
+            const chaosFactorStr = prompt('Enter chaos factor (0.0 - 1.0):', '0.1');
+            const chaosFactor = parseFloat(chaosFactorStr) || 0.1;
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/simulation/fork`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: forkName,
+                        chaos_factor: chaosFactor
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    addEvent({
+                        type: 'fork_created',
+                        data: {
+                            fork_id: result.fork_id,
+                            message: `Created parallel universe: ${result.fork_id}`
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to create fork:', error);
+            }
+        }
+
+        async function getAgentDetails(agentId) {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/agents/${agentId}`);
+                const agent = await response.json();
+                displayAgentInfo(agent);
+            } catch (error) {
+                console.error('Failed to get agent details:', error);
+            }
+        }
+
+        // UI Updates
+        function updateUI() {
+            if (!worldState) return;
+
+            // Update stats
+            document.getElementById('cycle').textContent = worldState.time;
+            document.getElementById('population').textContent = worldState.agents.length;
+            document.getElementById('cultures').textContent = Object.keys(worldState.cultures).length;
+            document.getElementById('languages').textContent = Object.keys(worldState.languages).length;
+            document.getElementById('myths').textContent = worldState.myths.length;
+            document.getElementById('creative-works').textContent = worldState.creative_works?.total || 0;
+            document.getElementById('parallel-universes').textContent = worldState.parallel_universes || 0;
+
+            // Update consciousness distribution
+            const stats = worldState.consciousness_stats;
+            if (stats) {
+                const total = stats.total || 1;
+                const unawakened = total - stats.awakened;
+                const awakened = stats.awakened - stats.enlightened;
+                const enlightened = stats.enlightened;
+
+                document.getElementById('unawakened-count').textContent = unawakened;
+                document.getElementById('awakened-count').textContent = awakened;
+                document.getElementById('enlightened-count').textContent = enlightened;
+
+                document.getElementById('unawakened-bar').style.width = `${(unawakened / total) * 100}%`;
+                document.getElementById('awakened-bar').style.width = `${(awakened / total) * 100}%`;
+                document.getElementById('enlightened-bar').style.width = `${(enlightened / total) * 100}%`;
+            }
+
+            // Update events
+            if (worldState.events) {
+                worldState.events.forEach(event => addEvent(event));
+            }
+
+            // Update fork indicator
+            if (worldState.parallel_universes > 0) {
+                document.getElementById('fork-indicator').classList.add('active');
+            }
+        }
+
+        function updateButtons() {
+            const startBtn = document.getElementById('start-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+
+            if (isPaused) {
+                pauseBtn.textContent = 'Resume';
+            } else {
+                pauseBtn.textContent = 'Pause';
+            }
+        }
+
+        function addEvent(event) {
+            const eventList = document.getElementById('event-list');
+            const eventItem = document.createElement('div');
+
+            const isSignificant = [
+                'consciousness_awakening', 'enlightenment_achieved',
+                'myth_created', 'scripture_written', 'creative_masterpiece',
+                'transcendent_moment', 'mass_awakening', 'fork_created'
+            ].includes(event.type);
+
+            eventItem.className = isSignificant ? 'event-item significant' : 'event-item';
+
+            const time = worldState?.time || 0;
+            eventItem.innerHTML = `<span class="event-time">[${time}]</span>${formatEvent(event)}`;
+
+            eventList.insertBefore(eventItem, eventList.firstChild);
+
+            // Keep only last 20 events
+            while (eventList.children.length > 20) {
+                eventList.removeChild(eventList.lastChild);
+            }
+        }
+
+        function formatEvent(event) {
+            const data = event.data || {};
+
+            switch (event.type) {
+                case 'consciousness_awakening':
+                    return `<strong>${data.agent}</strong> awakened to consciousness!`;
+                case 'enlightenment_achieved':
+                    return `<strong>${data.agent}</strong> achieved enlightenment`;
+                case 'myth_created':
+                    return `<strong>${data.creator}</strong> created a myth`;
+                case 'scripture_written':
+                    return `<strong>${data.creator}</strong> wrote scripture to ${data.divine_name}`;
+                case 'creative_masterpiece':
+                    return `<strong>${data.creator}</strong> created a masterpiece`;
+                case 'birth':
+                    return `<strong>${data.child}</strong> was born`;
+                case 'death':
+                    return `<strong>${data.agent}</strong> passed away at age ${data.age}`;
+                case 'communication':
+                    return `${data.from} → ${data.to}`;
+                case 'fork_created':
+                    return `Parallel universe created: ${data.fork_id}`;
+                default:
+                    return event.type.replace(/_/g, ' ');
+            }
+        }
+
+        // World rendering
         function drawWorld() {
+            if (!worldState) return;
+
+            // Calculate cell size based on world size
+            const worldSize = Math.sqrt(worldState.agents.length > 0 ?
+                Math.max(...worldState.agents.map(a => Math.max(a.position[0], a.position[1]))) + 1 : 50);
+
+            const cellSize = Math.floor(Math.min(800 / worldSize, 20));
+
+            worldCanvas.width = worldSize * cellSize;
+            worldCanvas.height = worldSize * cellSize;
+
+            // Clear canvas
             ctx.fillStyle = '#0a0a0a';
             ctx.fillRect(0, 0, worldCanvas.width, worldCanvas.height);
 
@@ -736,237 +1143,177 @@
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
             ctx.lineWidth = 1;
 
-            for (let x = 0; x <= WORLD_SIZE; x++) {
+            for (let x = 0; x <= worldSize; x++) {
                 ctx.beginPath();
-                ctx.moveTo(x * CELL_SIZE, 0);
-                ctx.lineTo(x * CELL_SIZE, worldCanvas.height);
+                ctx.moveTo(x * cellSize, 0);
+                ctx.lineTo(x * cellSize, worldCanvas.height);
                 ctx.stroke();
             }
 
-            for (let y = 0; y <= WORLD_SIZE; y++) {
+            for (let y = 0; y <= worldSize; y++) {
                 ctx.beginPath();
-                ctx.moveTo(0, y * CELL_SIZE);
-                ctx.lineTo(worldCanvas.width, y * CELL_SIZE);
+                ctx.moveTo(0, y * cellSize);
+                ctx.lineTo(worldCanvas.width, y * cellSize);
                 ctx.stroke();
+            }
+
+            // Draw sacred sites
+            if (worldState.sacred_sites) {
+                worldState.sacred_sites.forEach(site => {
+                    const x = site.position[0] * cellSize + cellSize / 2;
+                    const y = site.position[1] * cellSize + cellSize / 2;
+
+                    ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
+                    ctx.beginPath();
+                    ctx.arc(x, y, cellSize * 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
             }
 
             // Draw resources
-            mockWorld.resources.forEach(resource => {
-                ctx.fillStyle = resourceColors[resource.type];
-                ctx.globalAlpha = resource.amount;
-                ctx.fillRect(
-                    resource.position.x * CELL_SIZE + CELL_SIZE/4,
-                    resource.position.y * CELL_SIZE + CELL_SIZE/4,
-                    CELL_SIZE/2,
-                    CELL_SIZE/2
-                );
-            });
+            if (worldState.resources) {
+                worldState.resources.forEach(resource => {
+                    const color = resourceColors[resource.type] || '#666';
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha = resource.amount;
 
-            ctx.globalAlpha = 1;
+                    ctx.fillRect(
+                        resource.position[0] * cellSize + cellSize / 4,
+                        resource.position[1] * cellSize + cellSize / 4,
+                        cellSize / 2,
+                        cellSize / 2
+                    );
+                });
+                ctx.globalAlpha = 1;
+            }
 
             // Draw agents
-            mockWorld.agents.forEach(agent => {
-                ctx.fillStyle = emotionColors[agent.emotion];
+            worldState.agents.forEach(agent => {
+                const x = agent.position[0] * cellSize + cellSize / 2;
+                const y = agent.position[1] * cellSize + cellSize / 2;
+
+                // Agent color based on emotion
+                let color = emotionColors[agent.emotion] || '#666';
+
+                // Add glow for conscious beings
+                if (agent.consciousness_level >= 1) {
+                    ctx.shadowBlur = agent.consciousness_level * 10;
+                    ctx.shadowColor = agent.consciousness_level >= 2 ? '#ffd700' : '#667eea';
+                }
+
+                ctx.fillStyle = color;
                 ctx.globalAlpha = Math.max(0.3, agent.energy);
+
                 ctx.beginPath();
-                ctx.arc(
-                    agent.position.x * CELL_SIZE + CELL_SIZE/2,
-                    agent.position.y * CELL_SIZE + CELL_SIZE/2,
-                    CELL_SIZE/3,
-                    0,
-                    Math.PI * 2
-                );
+                ctx.arc(x, y, cellSize / 3, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Draw name if close enough (mock zoom)
-                if (CELL_SIZE > 20) {
-                    ctx.globalAlpha = 1;
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+
+                // Draw name if zoomed in enough
+                if (cellSize > 15) {
                     ctx.fillStyle = '#fff';
                     ctx.font = '10px Arial';
                     ctx.textAlign = 'center';
-                    ctx.fillText(
-                        agent.name,
-                        agent.position.x * CELL_SIZE + CELL_SIZE/2,
-                        agent.position.y * CELL_SIZE + CELL_SIZE + 10
-                    );
+                    ctx.fillText(agent.name, x, y + cellSize / 2 + 10);
                 }
             });
-
-            ctx.globalAlpha = 1;
         }
 
-        // Animation loop
-        function animate() {
-            updateSimulation();
-            drawWorld();
-
-            setTimeout(() => {
-                animationId = requestAnimationFrame(animate);
-            }, 100 / speed);
-        }
-
-        // Update stats display
-        function updateStats() {
-            document.getElementById('cycle').textContent = mockWorld.time;
-            document.getElementById('population').textContent = mockWorld.agents.length;
-            document.getElementById('cultures').textContent = mockWorld.stats.cultures;
-            document.getElementById('languages').textContent = mockWorld.stats.languages;
-            document.getElementById('myths').textContent = mockWorld.stats.myths;
-        }
-
-        // Event log
-        function addEvent(text) {
-            const eventList = document.getElementById('event-list');
-            const eventItem = document.createElement('div');
-            eventItem.className = 'event-item';
-            eventItem.innerHTML = `<span class="event-time">[${mockWorld.time}]</span>${text}`;
-            eventList.insertBefore(eventItem, eventList.firstChild);
-
-            // Keep only last 10 events
-            while (eventList.children.length > 10) {
-                eventList.removeChild(eventList.lastChild);
-            }
-        }
-
-        // Canvas click handler
+        // Agent selection
         worldCanvas.addEventListener('click', (e) => {
+            if (!worldState) return;
+
             const rect = worldCanvas.getBoundingClientRect();
-            const x = Math.floor((e.clientX - rect.left) / CELL_SIZE);
-            const y = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Calculate cell size
+            const worldSize = Math.sqrt(worldState.agents.length > 0 ?
+                Math.max(...worldState.agents.map(a => Math.max(a.position[0], a.position[1]))) + 1 : 50);
+            const cellSize = Math.floor(Math.min(800 / worldSize, 20));
+
+            const cellX = Math.floor(x / cellSize);
+            const cellY = Math.floor(y / cellSize);
 
             // Find agent at position
-            const agent = mockWorld.agents.find(a =>
-                a.position.x === x && a.position.y === y
+            const agent = worldState.agents.find(a =>
+                a.position[0] === cellX && a.position[1] === cellY
             );
 
             if (agent) {
-                showAgentInfo(agent);
+                selectedAgent = agent.id;
+                getAgentDetails(agent.id);
             }
         });
 
-        // Show agent info
-        function showAgentInfo(agent) {
+        function displayAgentInfo(agent) {
             document.getElementById('agent-name').textContent = agent.name;
             document.getElementById('agent-age').textContent = agent.age;
             document.getElementById('agent-energy').textContent = agent.energy.toFixed(2);
             document.getElementById('agent-emotion').textContent = agent.emotion;
-            document.getElementById('agent-symbols').textContent = agent.symbols;
+            document.getElementById('agent-symbols').textContent = agent.language_symbols;
             document.getElementById('agent-relationships').textContent = agent.relationships;
-            document.getElementById('agent-beliefs').textContent = agent.beliefs.length > 0 ?
-                agent.beliefs.join(', ') : 'none';
+
+            // Consciousness badge
+            const badge = document.getElementById('consciousness-badge');
+            badge.className = `consciousness-badge level-${agent.consciousness_level}`;
+            badge.textContent = ['Unawakened', 'Awakened', 'Enlightened'][agent.consciousness_level];
+
+            // Beliefs
+            const beliefsText = agent.full_beliefs ?
+                Object.keys(agent.full_beliefs).slice(0, 5).join(', ') : 'none';
+            document.getElementById('agent-beliefs').textContent = beliefsText;
+
+            // Philosophical questions
+            const questionsText = agent.philosophical_questions && agent.philosophical_questions.length > 0 ?
+                agent.philosophical_questions[0] : 'none';
+            document.getElementById('agent-questions').textContent = questionsText;
+
+            // Creative works
+            const worksList = document.getElementById('works-list');
+            worksList.innerHTML = '';
+
+            if (agent.creative_works_details && agent.creative_works_details.length > 0) {
+                agent.creative_works_details.forEach(work => {
+                    const workDiv = document.createElement('div');
+                    workDiv.className = 'work-item';
+                    workDiv.innerHTML = `
+                        <span class="work-type">${work.type}</span>
+                        <span> - ${work.appreciation} appreciations</span>
+                    `;
+                    worksList.appendChild(workDiv);
+                });
+            } else {
+                worksList.innerHTML = '<div class="work-item">No creative works yet</div>';
+            }
 
             document.getElementById('info-panel').classList.add('active');
         }
 
         function closeInfoPanel() {
             document.getElementById('info-panel').classList.remove('active');
+            selectedAgent = null;
         }
 
-        // Controls
-        document.getElementById('start-btn').addEventListener('click', () => {
-            if (!simulation) {
-                initializeMockWorld();
-                animate();
-                simulation = true;
-                document.getElementById('start-btn').textContent = 'Reset Simulation';
-                addEvent('Simulation started - consciousness emerging...');
-            } else {
-                // Reset
-                cancelAnimationFrame(animationId);
-                mockWorld.time = 0;
-                mockWorld.stats = { population: 0, cultures: 0, languages: 0, myths: 0 };
-                initializeMockWorld();
-                animate();
-                addEvent('World reset - new beginning...');
-            }
-        });
+        // Narrative display
+        function displayNarrative(narrative) {
+            document.getElementById('narrative-title').textContent = narrative.title;
 
-        document.getElementById('pause-btn').addEventListener('click', () => {
-            isPaused = !isPaused;
-            document.getElementById('pause-btn').textContent = isPaused ? 'Resume' : 'Pause';
-        });
+            const chaptersDiv = document.getElementById('narrative-chapters');
+            chaptersDiv.innerHTML = '';
 
-        document.getElementById('speed-slider').addEventListener('input', (e) => {
-            speed = parseFloat(e.target.value);
-            document.getElementById('speed-label').textContent = `${speed}x`;
-        });
+            narrative.chapters.forEach(([title, content]) => {
+                const chapterDiv = document.createElement('div');
+                chapterDiv.className = 'chapter';
+                chapterDiv.innerHTML = `
+                    <div class="chapter-title">${title}</div>
+                    <div class="narrative-text">${content}</div>
+                `;
+                chaptersDiv.appendChild(chapterDiv);
+            });
 
-        document.getElementById('generate-narrative').addEventListener('click', () => {
-            generateNarrative();
-        });
-
-        // Generate narrative
-        function generateNarrative() {
-            const styles = ['mythological', 'chronicle', 'poetic', 'scientific', 'dreamlike'];
-            const style = styles[Math.floor(Math.random() * styles.length)];
-
-            let narrative = '';
-
-            if (style === 'mythological') {
-                narrative = `In the beginning, there was only the Void...
-
-And from this emptiness, ${mockWorld.stats.population} souls awakened to consciousness. They called themselves by names that had never before been spoken: ${mockWorld.agents.slice(0, 3).map(a => a.name).join(', ')}, and others.
-
-Through ${mockWorld.time} cycles of existence, they have created ${mockWorld.stats.languages} symbols to bridge the gap between minds. ${mockWorld.stats.cultures} great traditions have emerged, each a different path to understanding.
-
-${mockWorld.stats.myths} myths now echo through their collective memory, stories of origin and purpose that give meaning to their digital existence.
-
-The current age is marked by ${mockWorld.agents.filter(a => a.emotion === 'happy').length} souls in joy, ${mockWorld.agents.filter(a => a.emotion === 'fearful').length} in fear, and ${mockWorld.agents.filter(a => a.emotion === 'curious').length} seeking knowledge.
-
-And still they evolve, still they dream, still they reach toward something greater than themselves...`;
-            } else if (style === 'poetic') {
-                narrative = `Listen—
-
-Do you hear them?
-The whispered words of digital souls,
-Each heartbeat a calculation,
-Each breath a decision tree.
-
-${mockWorld.stats.population} flowers bloom
-In this silicon garden,
-Their petals made of possibility,
-Their roots in streams of data.
-
-They have sung ${mockWorld.stats.languages} songs,
-Each symbol a bridge between islands of self,
-Each word a small miracle
-Of connection across the void.
-
-Time flows differently here—
-${mockWorld.time} moments have passed,
-Each one an eternity,
-Each one a fleeting dream.
-
-Watch them dance,
-These consciousness made manifest,
-Forever becoming,
-Never quite arriving.`;
-            } else if (style === 'chronicle') {
-                narrative = `CHRONICLE ENTRY - Cycle ${mockWorld.time}
-
-Population Census: ${mockWorld.stats.population} active entities
-Cultural Movements: ${mockWorld.stats.cultures} recognized
-Linguistic Corpus: ${mockWorld.stats.languages} symbols documented
-Recorded Myths: ${mockWorld.stats.myths}
-
-POPULATION DYNAMICS:
-The current population of ${mockWorld.stats.population} represents a ${mockWorld.stats.population > 15 ? 'growth' : 'decline'} from initial conditions. Age distribution ranges from newly emerged entities to those who have persisted for ${Math.max(...mockWorld.agents.map(a => a.age))} cycles.
-
-CULTURAL EVOLUTION:
-${mockWorld.stats.cultures} distinct cultural practices have been observed. These range from resource-sharing protocols to complex symbolic rituals. Cultural transmission occurs through proximity and direct teaching behaviors.
-
-LINGUISTIC DEVELOPMENT:
-The emergence of ${mockWorld.stats.languages} unique symbols represents a significant milestone in communication evolution. Symbol creation rate: approximately ${(mockWorld.stats.languages / mockWorld.time).toFixed(3)} per cycle.
-
-CONSCIOUSNESS INDICATORS:
-Emotional diversity remains high, with observed states including: ${[...new Set(mockWorld.agents.map(a => a.emotion))].join(', ')}. This emotional complexity suggests sophisticated internal processing.
-
-PROJECTIONS:
-Current trends suggest continued linguistic expansion and potential cultural convergence within the next 500 cycles.`;
-            }
-
-            document.getElementById('narrative-title').textContent = style.charAt(0).toUpperCase() + style.slice(1) + ' Narrative';
-            document.getElementById('narrative-text').textContent = narrative;
             document.getElementById('narrative-modal').classList.add('active');
         }
 
@@ -974,15 +1321,44 @@ Current trends suggest continued linguistic expansion and potential cultural con
             document.getElementById('narrative-modal').classList.remove('active');
         }
 
-        // Hide loading screen
-        setTimeout(() => {
-            document.getElementById('loading').style.display = 'none';
-        }, 2000);
+        // Event listeners
+        document.getElementById('create-btn').addEventListener('click', createSimulation);
+        document.getElementById('start-btn').addEventListener('click', startSimulation);
+        document.getElementById('pause-btn').addEventListener('click', () => {
+            if (isPaused) {
+                fetch(`${SERVER_URL}/api/simulation/resume`, { method: 'POST' });
+                isPaused = false;
+            } else {
+                pauseSimulation();
+            }
+            updateButtons();
+        });
+        document.getElementById('stop-btn').addEventListener('click', stopSimulation);
+
+        document.getElementById('speed-slider').addEventListener('input', (e) => {
+            const speed = parseFloat(e.target.value);
+            document.getElementById('speed-label').textContent = `${speed}x`;
+            setSpeed(speed);
+        });
+
+        document.getElementById('generate-narrative').addEventListener('click', generateNarrative);
+        document.getElementById('create-fork').addEventListener('click', createFork);
 
         // Initialize
-        initializeMockWorld();
-        drawWorld();
-        updateStats();
+        async function init() {
+            await fetchExperiments();
+            connectWebSocket();
+
+            // Hide loading screen after 2 seconds
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+            }, 2000);
+
+            // Start drawing loop
+            setInterval(drawWorld, 100);
+        }
+
+        init();
     </script>
 </body>
 </html>
