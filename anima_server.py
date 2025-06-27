@@ -9,6 +9,7 @@ import logging
 import time
 from typing import Dict, Optional
 from datetime import datetime
+from enum import Enum
 import os
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
@@ -20,6 +21,36 @@ import uvicorn
 from world_sim import SimulationWorld, SimulationConfig
 from anima_deepseek_agent import initialize_deepseek
 from narrative_synthesizer import NarrativeSynthesizer, NARRATIVE_STYLES
+
+def safe_json_serializer(obj):
+    """Safe JSON serializer that handles enums and other problematic objects"""
+    if isinstance(obj, Enum):
+        return obj.value
+    elif hasattr(obj, 'value') and not isinstance(obj, (str, int, float, bool)):
+        return obj.value
+    elif isinstance(obj, tuple):
+        return list(obj)
+    elif isinstance(obj, set):
+        return list(obj)
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '__dict__'):
+        # Convert object to dict, handling nested enums
+        result = {}
+        for key, value in obj.__dict__.items():
+            try:
+                json.dumps(value)  # Test if it's serializable
+                result[key] = value
+            except (TypeError, ValueError):
+                if isinstance(value, Enum):
+                    result[key] = value.value
+                elif hasattr(value, 'value'):
+                    result[key] = str(value)
+                else:
+                    result[key] = str(value)
+        return result
+    else:
+        return str(obj)  # Convert to string as fallback
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -160,8 +191,11 @@ class SimulationManager:
 
         for client in self.connected_clients:
             try:
-                await client.send_json(message)
-            except Exception:
+                # Use safe JSON serializer
+                safe_message = json.loads(json.dumps(message, default=safe_json_serializer))
+                await client.send_text(json.dumps(safe_message))
+            except Exception as e:
+                logger.error(f"Error broadcasting to client: {e}")
                 disconnected.append(client)
 
         # Remove disconnected clients
@@ -495,23 +529,53 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         # Send initial state if simulation exists
         if sim_manager.world:
-            state = sim_manager.world.get_world_state()
-            await websocket.send_json({
-                "type": "state",
-                "data": state,
-                "timestamp": time.time()
-            })
+            try:
+                state = sim_manager.world.get_world_state()
+
+                # Clean the state data to ensure JSON serialization
+                clean_state = json.loads(json.dumps(state, default=safe_json_serializer))
+
+                message = {
+                    "type": "state",
+                    "data": clean_state,
+                    "timestamp": time.time()
+                }
+
+                await websocket.send_text(json.dumps(message, default=safe_json_serializer))
+
+            except Exception as e:
+                # If there's still an error, send a minimal state
+                logger.error(f"Error sending state: {e}")
+                minimal_state = {
+                    "time": sim_manager.world.time if sim_manager.world else 0,
+                    "agents": [],
+                    "resources": [],
+                    "cultures": {},
+                    "languages": {},
+                    "myths": [],
+                    "events": [],
+                    "creative_works": {"total": 0, "by_type": {}, "masterpieces": 0},
+                    "consciousness_stats": {"awakened": 0, "enlightened": 0, "total": 0},
+                    "sacred_sites": [],
+                    "parallel_universes": 0
+                }
+
+                await websocket.send_text(json.dumps({
+                    "type": "state",
+                    "data": minimal_state,
+                    "timestamp": time.time()
+                }))
 
         # Keep connection alive
         while True:
-            # Wait for any message from client (ping/pong)
             data = await websocket.receive_text()
-
-            # Handle client commands
             if data == "ping":
                 await websocket.send_text("pong")
 
     except WebSocketDisconnect:
+        sim_manager.remove_client(websocket)
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
         sim_manager.remove_client(websocket)
 
 
@@ -525,6 +589,21 @@ async def health_check():
         "connected_clients": len(sim_manager.connected_clients),
         "current_time": sim_manager.world.time if sim_manager.world else 0
     }
+
+def json_serializer(obj):
+    """Custom JSON serializer to handle enum objects and other non-serializable types"""
+    if isinstance(obj, Enum):
+        return obj.value
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif isinstance(obj, tuple):
+        return list(obj)
+    elif isinstance(obj, set):
+        return list(obj)
+    elif hasattr(obj, '__dict__'):
+        return obj.__dict__
+    else:
+        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
 
 # Startup event

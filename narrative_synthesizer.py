@@ -12,6 +12,7 @@ from collections import defaultdict
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 import numpy as np
 from datetime import datetime
+from collections import deque
 import asyncio
 import logging
 

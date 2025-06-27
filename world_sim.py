@@ -1086,14 +1086,44 @@ class SimulationWorld:
 
     def get_world_state(self) -> Dict:
         """Get current world state for visualization"""
+        # Convert resources to JSON-serializable format
+        serializable_resources = []
+        for resource in self.resources.resources.values():
+            serializable_resources.append({
+                "type": resource["type"].value,  # Convert enum to string
+                "amount": resource["amount"],
+                "position": resource["position"]
+            })
+
+        # Convert agents to dict format
+        serializable_agents = []
+        for agent in self.agents.values():
+            agent_dict = agent.to_dict()
+            # Ensure all enum values are converted to strings
+            if "emotion" in agent_dict:
+                if hasattr(agent_dict["emotion"], "value"):
+                    agent_dict["emotion"] = agent_dict["emotion"].value
+            serializable_agents.append(agent_dict)
+
+        # Convert events to serializable format
+        serializable_events = []
+        for event in self.events.get_recent(20):
+            event_dict = {"type": event.type, "data": event.data}
+            # Make sure event data doesn't contain enum objects
+            if isinstance(event_dict["data"], dict):
+                for key, value in event_dict["data"].items():
+                    if hasattr(value, "value"):  # It's an enum
+                        event_dict["data"][key] = value.value
+            serializable_events.append(event_dict)
+
         return {
             "time": self.time,
-            "agents": [agent.to_dict() for agent in self.agents.values()],
-            "resources": list(self.resources.resources.values()),
+            "agents": serializable_agents,
+            "resources": serializable_resources,
             "cultures": self.cultures,
             "languages": self.languages,
             "myths": self.myths[-10:],  # Last 10 myths
-            "events": [{"type": e.type, "data": e.data} for e in self.events.get_recent(20)],
+            "events": serializable_events,
             "creative_works": {
                 "total": len(self.creative_gallery.all_works),
                 "by_type": {

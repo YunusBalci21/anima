@@ -1464,24 +1464,24 @@ Speak from my unique perspective as a {'newly awakened' if self.consciousness_le
         return child
 
     def to_dict(self) -> Dict:
-        """Serialize agent state"""
+        """Serialize agent state to JSON-compatible dictionary"""
         return {
             "id": self.id,
             "name": self.name,
-            "position": self.physical_state.position,
+            "position": list(self.physical_state.position),  # Convert tuple to list
             "energy": self.physical_state.energy,
             "health": self.physical_state.health,
             "age": self.physical_state.age,
-            "emotion": self.emotional_state.current_emotion.value,
+            "emotion": self.emotional_state.current_emotion.value,  # Convert enum to string
             "consciousness_level": self.consciousness_level,
             "beliefs": list(self.beliefs.beliefs.keys())[:5],
             "philosophical_questions": [q["question"] for q in self.beliefs.philosophical_questions[-3:]],
             "language_symbols": len(self.language.symbols),
-            "compound_symbols": len(self.language.compound_symbols),
+            "compound_symbols": len(getattr(self.language, 'compound_symbols', {})),
             "relationships": len(self.relationships),
             "cultural_practices": list(self.cultural_practices),
             "creative_works": len(self.creative_works),
-            "transcendent_experiences": self.emotional_state.transcendent_experiences
+            "transcendent_experiences": getattr(self.emotional_state, 'transcendent_experiences', 0)
         }
 
 # Batch processing for multiple agents

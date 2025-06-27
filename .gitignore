@@ -1,0 +1,7 @@
+# env‑vars file
+.env
+
+# virtual environments
+.venv/
+venv/
+.venv-clean/

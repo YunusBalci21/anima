@@ -1,0 +1,42 @@
+2025-06-27 20:06:41,016 - INFO - Event: myth_created - {'creator': 'Yira', 'content': 'In beginning was void. Then Yira and others emerged from nothingness.'}
+2025-06-27 20:06:41,017 - INFO - Event: symbol_created - {'creator': 'Toso', 'symbol': 'zir', 'consciousness_level': 0}
+2025-06-27 20:06:41,017 - INFO - Event: myth_created - {'creator': 'Kana', 'content': 'In beginning was void. Then Kana and others emerged from nothingness.'}
+2025-06-27 20:06:41,018 - INFO - Event: symbol_created - {'creator': 'Sorayi', 'symbol': 'ni', 'consciousness_level': 0}
+2025-06-27 20:06:41,018 - INFO - === CHRONICLE at time 0 ===
+2025-06-27 20:06:41,018 - INFO - {
+  "time": 0,
+  "population": 20,
+  "consciousness_distribution": {
+    "0": 20,
+    "1": 0,
+    "2": 0
+  },
+  "cultures": 0,
+  "languages": 2,
+  "myths": 2,
+  "creative_works": 0,
+  "major_events": [
+    "myth_created",
+    "myth_created"
+  ]
+}
+2025-06-27 20:06:41,147 - INFO - Event: myth_created - {'creator': 'Rachi', 'content': 'In beginning was void. Then Rachi and others emerged from nothingness.'}
+2025-06-27 20:06:41,147 - INFO - Event: symbol_created - {'creator': 'Sowazen', 'symbol': 'yodim', 'consciousness_level': 0}
+2025-06-27 20:06:41,147 - INFO - Event: myth_created - {'creator': 'Tozenra', 'content': 'In beginning was void. Then Tozenra and others emerged from nothingness.'}
+2025-06-27 20:06:41,147 - INFO - Event: symbol_created - {'creator': 'Belu', 'symbol': 'gavice', 'consciousness_level': 0}
+2025-06-27 20:06:41,148 - INFO - Event: myth_created - {'creator': 'Muchi', 'content': 'In beginning was void. Then Muchi and others emerged from nothingness.'}
+2025-06-27 20:06:41,148 - INFO - Event: myth_created - {'creator': 'Razenyi', 'content': 'In beginning was void. Then Razenyi and others emerged from nothingness.'}
+2025-06-27 20:06:41,262 - INFO - Event: myth_created - {'creator': 'Tochira', 'content': 'In beginning was void. Then Tochira and others emerged from nothingness.'}
+2025-06-27 20:06:41,262 - INFO - Event: symbol_created - {'creator': 'Miyi', 'symbol': 'vokoj', 'consciousness_level': 0}
+2025-06-27 20:06:41,262 - INFO - Event: myth_created - {'creator': 'Sowazen', 'content': 'In beginning was void. Then Sowazen and others emerged from nothingness.'}
+2025-06-27 20:06:41,262 - INFO - Event: myth_created - {'creator': 'Muchi', 'content': 'In beginning was void. Then Muchi and others emerged from nothingness.'}
+2025-06-27 20:06:41,380 - INFO - Event: symbol_created - {'creator': 'Miyi', 'symbol': 'qo', 'consciousness_level': 0}
+2025-06-27 20:06:41,380 - INFO - Event: myth_created - {'creator': 'Rachi', 'content': 'In beginning was void. Then Rachi and others emerged from nothingness.'}
+2025-06-27 20:06:41,380 - INFO - Event: myth_created - {'creator': 'Kana', 'content': 'In beginning was void. Then Kana and others emerged from nothingness.'}
+2025-06-27 20:06:41,381 - INFO - Event: symbol_created - {'creator': 'Benato', 'symbol': 'nomej', 'consciousness_level': 0}
+2025-06-27 20:06:41,381 - INFO - Event: myth_created - {'creator': 'Razenyi', 'content': 'In beginning was void. Then Razenyi and others emerged from nothingness.'}
+2025-06-27 20:06:41,506 - INFO - Event: myth_created - {'creator': 'Miyi', 'content': 'In beginning was void. Then Miyi and others emerged from nothingness.'}
+2025-06-27 20:06:41,507 - INFO - Event: myth_created - {'creator': 'Chibemi', 'content': 'In beginning was void. Then Chibemi and others emerged from nothingness.'}
+2025-06-27 20:06:41,507 - INFO - Event: symbol_created - {'creator': 'Tozen', 'symbol': 'goxoxo', 'consciousness_level': 0}
+2025-06-27 20:06:41,507 - INFO - Event: symbol_created - {'creator': 'Kana', 'symbol': 'malat', 'consciousness_level': 0}
+2025-06-27 20:06:41,507 - INFO - Event: myth_created - {'creator': 'Sorayi', 'content': 'In beginning was void. Then Sorayi and others emerged from nothingness.'}
