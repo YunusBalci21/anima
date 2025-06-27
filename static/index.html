@@ -66,6 +66,36 @@
             font-style: italic;
         }
 
+        /* Status indicators */
+        .status-indicator {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .status-indicator.loading {
+            border-left-color: #ffa500;
+            background: rgba(255, 165, 0, 0.1);
+        }
+
+        .status-indicator.error {
+            border-left-color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+        }
+
+        .status-indicator.success {
+            border-left-color: #44ff44;
+            background: rgba(68, 255, 68, 0.1);
+        }
+
+        .status-text {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
         /* Stats */
         .stats {
             background: rgba(255, 255, 255, 0.05);
@@ -152,7 +182,7 @@
             margin-bottom: 10px;
         }
 
-        .btn:hover {
+        .btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
         }
@@ -161,13 +191,20 @@
             transform: translateY(0);
         }
 
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         .btn.secondary {
             background: rgba(255, 255, 255, 0.1);
             font-size: 14px;
             padding: 10px 20px;
         }
 
-        .btn.secondary:hover {
+        .btn.secondary:hover:not(:disabled) {
             background: rgba(255, 255, 255, 0.15);
         }
 
@@ -238,68 +275,96 @@
             cursor: crosshair;
         }
 
-        /* Info panel */
-        .info-panel {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(20, 20, 30, 0.95);
-            padding: 20px;
-            border-radius: 12px;
-            min-width: 300px;
-            max-width: 400px;
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 10, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
             backdrop-filter: blur(10px);
+        }
+
+        .loading-content {
+            text-align: center;
+            max-width: 500px;
+            padding: 40px;
+            background: rgba(20, 20, 30, 0.9);
+            border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            display: none;
-            max-height: 80vh;
-            overflow-y: auto;
         }
 
-        .info-panel.active {
-            display: block;
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
         }
 
-        .agent-info h3 {
-            margin-bottom: 15px;
-            color: #667eea;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        .agent-detail {
-            font-size: 13px;
-            margin-bottom: 8px;
+        .loading-progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin: 20px 0;
+            overflow: hidden;
         }
 
-        .consciousness-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-            margin-left: 8px;
+        .loading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            animation: loading-shimmer 2s infinite;
         }
 
-        .consciousness-badge.level-0 { background: #444; }
-        .consciousness-badge.level-1 { background: #667eea; }
-        .consciousness-badge.level-2 { background: #ffd700; color: #000; }
-
-        /* Creative works display */
-        .creative-works {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        @keyframes loading-shimmer {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
         }
 
-        .work-item {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 8px;
-            border-radius: 4px;
-            margin-bottom: 8px;
+        /* Connection status */
+        .connection-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
             font-size: 12px;
+            font-weight: bold;
         }
 
-        .work-type {
-            font-weight: bold;
-            color: #667eea;
+        .connection-status.connected {
+            background: #4caf50;
+            color: white;
+        }
+
+        .connection-status.disconnected {
+            background: #f44336;
+            color: white;
+        }
+
+        .connection-status.connecting {
+            background: #ff9800;
+            color: white;
+        }
+
+        /* Hide when ready */
+        .hidden {
+            display: none !important;
         }
 
         /* Legend */
@@ -326,188 +391,21 @@
             border-radius: 50%;
             margin-right: 8px;
         }
-
-        /* Fork indicator */
-        .fork-indicator {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(20, 20, 30, 0.95);
-            padding: 15px;
-            border-radius: 8px;
-            backdrop-filter: blur(10px);
-            display: none;
-        }
-
-        .fork-indicator.active {
-            display: block;
-        }
-
-        /* Narrative modal */
-        .narrative-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 20px;
-        }
-
-        .narrative-modal.active {
-            display: flex;
-        }
-
-        .narrative-content {
-            background: rgba(20, 20, 30, 0.95);
-            padding: 40px;
-            border-radius: 16px;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            width: 100%;
-        }
-
-        .narrative-content h2 {
-            margin-bottom: 20px;
-            color: #667eea;
-        }
-
-        .narrative-text {
-            line-height: 1.8;
-            font-size: 16px;
-            white-space: pre-wrap;
-        }
-
-        .chapter {
-            margin-bottom: 30px;
-        }
-
-        .chapter-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #764ba2;
-            margin-bottom: 10px;
-        }
-
-        .close-btn {
-            float: right;
-            font-size: 24px;
-            cursor: pointer;
-            color: #666;
-            transition: color 0.3s;
-        }
-
-        .close-btn:hover {
-            color: #fff;
-        }
-
-        /* Loading */
-        .loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #0a0a0a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 3000;
-        }
-
-        .loading-content {
-            text-align: center;
-        }
-
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top-color: #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Connection status */
-        .connection-status {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .connection-status.connected {
-            background: #4caf50;
-            color: white;
-        }
-
-        .connection-status.disconnected {
-            background: #f44336;
-            color: white;
-        }
-
-        /* Sacred site glow */
-        @keyframes sacred-glow {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.8; }
-        }
-
-        .sacred-site {
-            animation: sacred-glow 2s infinite;
-        }
-
-        /* Tooltips */
-        .tooltip {
-            position: relative;
-            display: inline-block;
-            cursor: help;
-        }
-
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 200px;
-            background-color: rgba(0, 0, 0, 0.9);
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 10px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            margin-left: -100px;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
     </style>
 </head>
 <body>
-    <!-- Loading screen -->
-    <div class="loading" id="loading">
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loading-overlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
-            <p>Initializing consciousness engine...</p>
+            <h2 id="loading-title">Initializing ANIMA</h2>
+            <p id="loading-message">Starting consciousness engine...</p>
+            <div class="loading-progress">
+                <div class="loading-progress-bar" id="loading-progress" style="width: 10%;"></div>
+            </div>
+            <p id="loading-detail" style="font-size: 12px; color: #888; margin-top: 10px;">
+                Connecting to server...
+            </p>
         </div>
     </div>
 
@@ -521,8 +419,15 @@
             <h1 class="logo">ANIMA</h1>
             <p class="tagline">The Emergent Self Engine</p>
 
-            <div class="connection-status disconnected" id="connection-status">
-                Disconnected
+            <div class="connection-status connecting" id="connection-status">
+                Connecting...
+            </div>
+
+            <!-- Model Status -->
+            <div class="status-indicator" id="model-status">
+                <div class="status-text" id="status-text">
+                    Initializing...
+                </div>
             </div>
 
             <!-- Stats -->
@@ -550,10 +455,6 @@
                 <div class="stat-item">
                     <span class="stat-label">Creative Works</span>
                     <span class="stat-value" id="creative-works">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Parallel Universes</span>
-                    <span class="stat-value" id="parallel-universes">0</span>
                 </div>
             </div>
 
@@ -584,72 +485,36 @@
                     <label class="control-label">Experiment</label>
                     <select class="btn secondary" id="experiment-select" style="width: 100%; text-align: left;">
                         <option value="genesis">Genesis - The First Awakening</option>
-                        <option value="scarcity">Scarcity - The Hungry World</option>
-                        <option value="abundance">Abundance - The Garden Paradise</option>
-                        <option value="enlightenment">Enlightenment - The Awakening</option>
-                        <option value="babel">Babel - The Tower of Tongues</option>
                     </select>
                 </div>
 
-                <button class="btn" id="create-btn">Create New World</button>
+                <button class="btn" id="create-btn" disabled>Create New World</button>
 
                 <div class="btn-group">
-                    <button class="btn secondary" id="start-btn">Start</button>
-                    <button class="btn secondary" id="pause-btn">Pause</button>
-                    <button class="btn secondary" id="stop-btn">Stop</button>
+                    <button class="btn secondary" id="start-btn" disabled>Start</button>
+                    <button class="btn secondary" id="pause-btn" disabled>Pause</button>
+                    <button class="btn secondary" id="stop-btn" disabled>Stop</button>
                 </div>
 
                 <div class="control-group">
                     <label class="control-label">Speed: <span id="speed-label">1x</span></label>
                     <input type="range" class="speed-slider" id="speed-slider"
-                           min="0.1" max="5" step="0.1" value="1">
-                </div>
-
-                <div class="btn-group">
-                    <button class="btn secondary" id="generate-narrative">Generate Narrative</button>
-                    <button class="btn secondary" id="create-fork">Fork Universe</button>
+                           min="0.1" max="5" step="0.1" value="1" disabled>
                 </div>
             </div>
 
             <!-- Event log -->
             <div class="event-log">
                 <h3>Recent Events</h3>
-                <div id="event-list"></div>
+                <div id="event-list">
+                    <div class="event-item">System initializing...</div>
+                </div>
             </div>
         </div>
 
         <!-- World view -->
         <div class="world-container">
             <canvas id="world-canvas"></canvas>
-
-            <!-- Fork indicator -->
-            <div class="fork-indicator" id="fork-indicator">
-                <h4>Parallel Universes</h4>
-                <div id="fork-list"></div>
-            </div>
-
-            <!-- Agent info panel -->
-            <div class="info-panel" id="info-panel">
-                <span class="close-btn" onclick="closeInfoPanel()">&times;</span>
-                <div class="agent-info">
-                    <h3>
-                        <span id="agent-name">Agent Name</span>
-                        <span class="consciousness-badge" id="consciousness-badge"></span>
-                    </h3>
-                    <div class="agent-detail">Age: <span id="agent-age">0</span> cycles</div>
-                    <div class="agent-detail">Energy: <span id="agent-energy">0</span></div>
-                    <div class="agent-detail">Emotion: <span id="agent-emotion">neutral</span></div>
-                    <div class="agent-detail">Symbols Known: <span id="agent-symbols">0</span></div>
-                    <div class="agent-detail">Relationships: <span id="agent-relationships">0</span></div>
-                    <div class="agent-detail">Beliefs: <span id="agent-beliefs">none</span></div>
-                    <div class="agent-detail">Questions: <span id="agent-questions">none</span></div>
-
-                    <div class="creative-works" id="agent-creative-works">
-                        <h4>Creative Works</h4>
-                        <div id="works-list"></div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Legend -->
             <div class="legend">
@@ -682,15 +547,6 @@
         </div>
     </div>
 
-    <!-- Narrative modal -->
-    <div class="narrative-modal" id="narrative-modal">
-        <div class="narrative-content">
-            <span class="close-btn" onclick="closeNarrativeModal()">&times;</span>
-            <h2 id="narrative-title">The Story Unfolds</h2>
-            <div id="narrative-chapters"></div>
-        </div>
-    </div>
-
     <script>
         // Configuration
         const SERVER_URL = window.location.origin;
@@ -699,17 +555,11 @@
         // Global state
         let ws = null;
         let worldState = null;
-        let selectedAgent = null;
-        let isPaused = false;
-        let experiments = {};
+        let isReady = false;
+        let connectionAttempts = 0;
+        let maxConnectionAttempts = 10;
 
-        // Canvas setup
-        const worldCanvas = document.getElementById('world-canvas');
-        const ctx = worldCanvas.getContext('2d');
-        const particleCanvas = document.getElementById('particle-canvas');
-        const particleCtx = particleCanvas.getContext('2d');
-
-        // Emotion colors (matching server)
+        // Emotion colors
         const emotionColors = {
             neutral: '#646464',
             happy: '#64c864',
@@ -724,130 +574,115 @@
             transcendent: '#ffd700'
         };
 
-        // Resource colors
-        const resourceColors = {
-            food: '#64c864',
-            water: '#6496ff',
-            shelter: '#966432',
-            light: '#ffff96',
-            knowledge: '#c864ff'
-        };
+        // Loading management
+        function updateLoadingProgress(percentage, message, detail = '') {
+            const progressBar = document.getElementById('loading-progress');
+            const messageEl = document.getElementById('loading-message');
+            const detailEl = document.getElementById('loading-detail');
 
-        // Initialize particle background
-        particleCanvas.width = window.innerWidth;
-        particleCanvas.height = window.innerHeight;
+            if (progressBar) progressBar.style.width = `${Math.min(100, Math.max(0, percentage))}%`;
+            if (messageEl) messageEl.textContent = message;
+            if (detailEl) detailEl.textContent = detail;
+        }
 
-        const particles = [];
-        const particleCount = 100;
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * particleCanvas.width;
-                this.y = Math.random() * particleCanvas.height;
-                this.size = Math.random() * 2;
-                this.speedX = (Math.random() - 0.5) * 0.5;
-                this.speedY = (Math.random() - 0.5) * 0.5;
-            }
-
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-
-                if (this.x > particleCanvas.width || this.x < 0) {
-                    this.speedX = -this.speedX;
-                }
-                if (this.y > particleCanvas.height || this.y < 0) {
-                    this.speedY = -this.speedY;
-                }
-            }
-
-            draw() {
-                particleCtx.fillStyle = 'rgba(102, 126, 234, 0.5)';
-                particleCtx.beginPath();
-                particleCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                particleCtx.fill();
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                isReady = true;
+                enableControls();
             }
         }
 
-        // Initialize particles
-        for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle());
-        }
-
-        function animateParticles() {
-            particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-
-            particles.forEach(particle => {
-                particle.update();
-                particle.draw();
+        function enableControls() {
+            const buttons = ['create-btn', 'start-btn', 'pause-btn', 'stop-btn'];
+            buttons.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = false;
             });
 
-            // Draw connections
-            particles.forEach((particle, i) => {
-                particles.slice(i + 1).forEach(otherParticle => {
-                    const distance = Math.sqrt(
-                        Math.pow(particle.x - otherParticle.x, 2) +
-                        Math.pow(particle.y - otherParticle.y, 2)
-                    );
-
-                    if (distance < 100) {
-                        particleCtx.strokeStyle = `rgba(102, 126, 234, ${0.2 * (1 - distance / 100)})`;
-                        particleCtx.lineWidth = 0.5;
-                        particleCtx.beginPath();
-                        particleCtx.moveTo(particle.x, particle.y);
-                        particleCtx.lineTo(otherParticle.x, otherParticle.y);
-                        particleCtx.stroke();
-                    }
-                });
-            });
-
-            requestAnimationFrame(animateParticles);
+            const slider = document.getElementById('speed-slider');
+            if (slider) slider.disabled = false;
         }
 
-        animateParticles();
-
-        // WebSocket connection
+        // Connection management
         function connectWebSocket() {
+            if (connectionAttempts >= maxConnectionAttempts) {
+                updateLoadingProgress(0, 'Connection failed', 'Please refresh the page and try again');
+                updateConnectionStatus('disconnected');
+                return;
+            }
+
+            connectionAttempts++;
+            updateLoadingProgress(10 + (connectionAttempts * 5), 'Connecting to server...',
+                `Attempt ${connectionAttempts}/${maxConnectionAttempts}`);
+
             ws = new WebSocket(WS_URL);
 
             ws.onopen = () => {
                 console.log('Connected to ANIMA server');
-                updateConnectionStatus(true);
+                connectionAttempts = 0; // Reset on successful connection
+                updateConnectionStatus('connected');
+                updateLoadingProgress(30, 'Connected to server', 'Waiting for initial data...');
 
-                // Send ping every 30 seconds to keep connection alive
+                // Send ping to keep connection alive
                 setInterval(() => {
-                    if (ws.readyState === WebSocket.OPEN) {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
                         ws.send('ping');
                     }
                 }, 30000);
-            };cl
+            };
 
             ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                handleServerMessage(data);
+                try {
+                    const data = JSON.parse(event.data);
+                    handleServerMessage(data);
+                } catch (error) {
+                    console.error('Error parsing message:', error);
+                }
             };
 
             ws.onclose = () => {
                 console.log('Disconnected from server');
-                updateConnectionStatus(false);
+                updateConnectionStatus('disconnected');
 
-                // Try to reconnect after 3 seconds
-                setTimeout(connectWebSocket, 3000);
+                if (!isReady) {
+                    // Try to reconnect during initialization
+                    setTimeout(() => {
+                        updateConnectionStatus('connecting');
+                        connectWebSocket();
+                    }, 2000);
+                } else {
+                    // Try to reconnect after connection lost
+                    setTimeout(() => {
+                        updateConnectionStatus('connecting');
+                        connectWebSocket();
+                    }, 3000);
+                }
             };
 
             ws.onerror = (error) => {
                 console.error('WebSocket error:', error);
+                updateConnectionStatus('disconnected');
             };
         }
 
-        function updateConnectionStatus(connected) {
-            const status = document.getElementById('connection-status');
-            if (connected) {
-                status.textContent = 'Connected';
-                status.className = 'connection-status connected';
-            } else {
-                status.textContent = 'Disconnected';
-                status.className = 'connection-status disconnected';
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('connection-status');
+            if (!statusEl) return;
+
+            statusEl.className = `connection-status ${status}`;
+
+            switch (status) {
+                case 'connected':
+                    statusEl.textContent = 'Connected';
+                    break;
+                case 'connecting':
+                    statusEl.textContent = 'Connecting...';
+                    break;
+                case 'disconnected':
+                    statusEl.textContent = 'Disconnected';
+                    break;
             }
         }
 
@@ -856,20 +691,74 @@
                 worldState = data.data;
                 updateUI();
                 drawWorld();
-            } else if (data.type === 'narrative') {
-                displayNarrative(data.story);
-            } else if (data.type === 'event') {
-                addEvent(data.event);
+
+                // Check if this is first state received
+                if (!isReady) {
+                    updateLoadingProgress(80, 'World loaded', 'Checking model status...');
+                    checkReadyState();
+                }
+            } else if (data.type === 'status') {
+                handleStatusMessage(data);
             }
         }
 
-        // API calls
+        function handleStatusMessage(data) {
+            const statusEl = document.getElementById('model-status');
+            const textEl = document.getElementById('status-text');
+
+            if (data.loading) {
+                statusEl.className = 'status-indicator loading';
+                textEl.textContent = data.message || 'Loading consciousness engine...';
+                updateLoadingProgress(50, 'Loading DeepSeek model...',
+                    'This may take several minutes depending on your hardware');
+            } else if (data.error) {
+                statusEl.className = 'status-indicator error';
+                textEl.textContent = data.message || 'Model loading failed';
+                updateLoadingProgress(90, 'LLM loading failed, using rule-based agents',
+                    'The simulation will still work without the AI model');
+                setTimeout(() => hideLoadingOverlay(), 3000);
+            } else if (data.model_loaded) {
+                statusEl.className = 'status-indicator success';
+                textEl.textContent = '🧠 DeepSeek consciousness engine ready!';
+                updateLoadingProgress(100, 'Consciousness engine ready!', 'Agents can now achieve true awakening');
+                setTimeout(() => hideLoadingOverlay(), 2000);
+            }
+        }
+
+        function checkReadyState() {
+            if (worldState) {
+                const modelStatus = worldState.model_status;
+
+                if (modelStatus) {
+                    if (modelStatus.loading) {
+                        updateLoadingProgress(60, 'World ready, loading AI model...',
+                            'This is the longest step - please wait');
+                    } else if (modelStatus.loaded) {
+                        updateLoadingProgress(100, 'Everything ready!', 'Welcome to ANIMA');
+                        setTimeout(() => hideLoadingOverlay(), 1500);
+                    } else if (modelStatus.error) {
+                        updateLoadingProgress(90, 'Ready (without AI model)',
+                            'Running in basic mode - still fully functional');
+                        setTimeout(() => hideLoadingOverlay(), 3000);
+                    } else {
+                        // No status yet, but world exists
+                        updateLoadingProgress(85, 'Finalizing setup...', '');
+                        setTimeout(() => hideLoadingOverlay(), 2000);
+                    }
+                } else {
+                    // No model status, assume ready
+                    updateLoadingProgress(100, 'Ready!', '');
+                    setTimeout(() => hideLoadingOverlay(), 1500);
+                }
+            }
+        }
+
+        // API Functions
         async function fetchExperiments() {
             try {
                 const response = await fetch(`${SERVER_URL}/api/experiments`);
-                experiments = await response.json();
+                const experiments = await response.json();
 
-                // Update experiment selector
                 const select = document.getElementById('experiment-select');
                 select.innerHTML = '';
 
@@ -881,12 +770,15 @@
                 });
             } catch (error) {
                 console.error('Failed to fetch experiments:', error);
+                addEvent('Failed to fetch experiments');
             }
         }
 
         async function createSimulation() {
             const experimentKey = document.getElementById('experiment-select').value;
-            const config = experiments[experimentKey]?.config || {
+
+            // Default config
+            const config = {
                 world_size: [50, 50],
                 initial_agents: 20,
                 resource_spawn_rate: 0.1,
@@ -901,122 +793,12 @@
                 });
 
                 const result = await response.json();
-
                 if (result.status === 'success') {
-                    addEvent({ type: 'system', data: { message: 'New world created' } });
+                    addEvent('New world created successfully');
                 }
             } catch (error) {
                 console.error('Failed to create simulation:', error);
-            }
-        }
-
-        async function startSimulation() {
-            try {
-                await fetch(`${SERVER_URL}/api/simulation/start`, { method: 'POST' });
-                isPaused = false;
-                updateButtons();
-            } catch (error) {
-                console.error('Failed to start simulation:', error);
-            }
-        }
-
-        async function pauseSimulation() {
-            try {
-                await fetch(`${SERVER_URL}/api/simulation/pause`, { method: 'POST' });
-                isPaused = true;
-                updateButtons();
-            } catch (error) {
-                console.error('Failed to pause simulation:', error);
-            }
-        }
-
-        async function stopSimulation() {
-            try {
-                await fetch(`${SERVER_URL}/api/simulation/stop`, { method: 'POST' });
-                updateButtons();
-            } catch (error) {
-                console.error('Failed to stop simulation:', error);
-            }
-        }
-
-        async function setSpeed(multiplier) {
-            try {
-                await fetch(`${SERVER_URL}/api/simulation/speed`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ multiplier })
-                });
-            } catch (error) {
-                console.error('Failed to set speed:', error);
-            }
-        }
-
-        async function generateNarrative() {
-            // Get available styles
-            try {
-                const stylesResponse = await fetch(`${SERVER_URL}/api/narrative/styles`);
-                const stylesData = await stylesResponse.json();
-                const styles = stylesData.styles.map(s => s.name);
-
-                // Choose random style
-                const style = styles[Math.floor(Math.random() * styles.length)];
-
-                const response = await fetch(`${SERVER_URL}/api/narrative/generate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ style })
-                });
-
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    displayNarrative(result.narrative);
-                }
-            } catch (error) {
-                console.error('Failed to generate narrative:', error);
-            }
-        }
-
-        async function createFork() {
-            const forkName = prompt('Enter name for the parallel universe:');
-            if (!forkName) return;
-
-            const chaosFactorStr = prompt('Enter chaos factor (0.0 - 1.0):', '0.1');
-            const chaosFactor = parseFloat(chaosFactorStr) || 0.1;
-
-            try {
-                const response = await fetch(`${SERVER_URL}/api/simulation/fork`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: forkName,
-                        chaos_factor: chaosFactor
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    addEvent({
-                        type: 'fork_created',
-                        data: {
-                            fork_id: result.fork_id,
-                            message: `Created parallel universe: ${result.fork_id}`
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('Failed to create fork:', error);
-            }
-        }
-
-        async function getAgentDetails(agentId) {
-            try {
-                const response = await fetch(`${SERVER_URL}/api/agents/${agentId}`);
-                const agent = await response.json();
-                displayAgentInfo(agent);
-            } catch (error) {
-                console.error('Failed to get agent details:', error);
+                addEvent('Failed to create new world');
             }
         }
 
@@ -1025,21 +807,20 @@
             if (!worldState) return;
 
             // Update stats
-            document.getElementById('cycle').textContent = worldState.time;
-            document.getElementById('population').textContent = worldState.agents.length;
-            document.getElementById('cultures').textContent = Object.keys(worldState.cultures).length;
-            document.getElementById('languages').textContent = Object.keys(worldState.languages).length;
-            document.getElementById('myths').textContent = worldState.myths.length;
+            document.getElementById('cycle').textContent = worldState.time || 0;
+            document.getElementById('population').textContent = worldState.agents?.length || 0;
+            document.getElementById('cultures').textContent = Object.keys(worldState.cultures || {}).length;
+            document.getElementById('languages').textContent = Object.keys(worldState.languages || {}).length;
+            document.getElementById('myths').textContent = worldState.myths?.length || 0;
             document.getElementById('creative-works').textContent = worldState.creative_works?.total || 0;
-            document.getElementById('parallel-universes').textContent = worldState.parallel_universes || 0;
 
             // Update consciousness distribution
             const stats = worldState.consciousness_stats;
-            if (stats) {
-                const total = stats.total || 1;
-                const unawakened = total - stats.awakened;
-                const awakened = stats.awakened - stats.enlightened;
-                const enlightened = stats.enlightened;
+            if (stats && stats.total > 0) {
+                const total = stats.total;
+                const unawakened = total - (stats.awakened || 0);
+                const awakened = (stats.awakened || 0) - (stats.enlightened || 0);
+                const enlightened = stats.enlightened || 0;
 
                 document.getElementById('unawakened-count').textContent = unawakened;
                 document.getElementById('awakened-count').textContent = awakened;
@@ -1050,141 +831,84 @@
                 document.getElementById('enlightened-bar').style.width = `${(enlightened / total) * 100}%`;
             }
 
-            // Update events
-            if (worldState.events) {
-                worldState.events.forEach(event => addEvent(event));
-            }
-
-            // Update fork indicator
-            if (worldState.parallel_universes > 0) {
-                document.getElementById('fork-indicator').classList.add('active');
-            }
+            // Update model status indicator
+            updateModelStatusIndicator();
         }
 
-        function updateButtons() {
-            const startBtn = document.getElementById('start-btn');
-            const pauseBtn = document.getElementById('pause-btn');
+        function updateModelStatusIndicator() {
+            if (!worldState || !worldState.model_status) return;
 
-            if (isPaused) {
-                pauseBtn.textContent = 'Resume';
+            const statusEl = document.getElementById('model-status');
+            const textEl = document.getElementById('status-text');
+            const modelStatus = worldState.model_status;
+
+            if (modelStatus.loading) {
+                statusEl.className = 'status-indicator loading';
+                textEl.textContent = '🔄 Loading DeepSeek consciousness engine...';
+            } else if (modelStatus.error) {
+                statusEl.className = 'status-indicator error';
+                textEl.textContent = '⚠️ Running without AI model (rule-based agents)';
+            } else if (modelStatus.loaded) {
+                statusEl.className = 'status-indicator success';
+                textEl.textContent = '🧠 DeepSeek consciousness engine active';
             } else {
-                pauseBtn.textContent = 'Pause';
+                statusEl.className = 'status-indicator';
+                textEl.textContent = '⚙️ System ready';
             }
         }
 
-        function addEvent(event) {
+        function addEvent(message) {
             const eventList = document.getElementById('event-list');
             const eventItem = document.createElement('div');
-
-            const isSignificant = [
-                'consciousness_awakening', 'enlightenment_achieved',
-                'myth_created', 'scripture_written', 'creative_masterpiece',
-                'transcendent_moment', 'mass_awakening', 'fork_created'
-            ].includes(event.type);
-
-            eventItem.className = isSignificant ? 'event-item significant' : 'event-item';
+            eventItem.className = 'event-item';
 
             const time = worldState?.time || 0;
-            eventItem.innerHTML = `<span class="event-time">[${time}]</span>${formatEvent(event)}`;
+            eventItem.innerHTML = `<span class="event-time">[${time}]</span>${message}`;
 
             eventList.insertBefore(eventItem, eventList.firstChild);
 
-            // Keep only last 20 events
-            while (eventList.children.length > 20) {
+            // Keep only last 10 events
+            while (eventList.children.length > 10) {
                 eventList.removeChild(eventList.lastChild);
             }
         }
 
-        function formatEvent(event) {
-            const data = event.data || {};
+        // Canvas setup and drawing
+        const worldCanvas = document.getElementById('world-canvas');
+        const ctx = worldCanvas.getContext('2d');
 
-            switch (event.type) {
-                case 'consciousness_awakening':
-                    return `<strong>${data.agent}</strong> awakened to consciousness!`;
-                case 'enlightenment_achieved':
-                    return `<strong>${data.agent}</strong> achieved enlightenment`;
-                case 'myth_created':
-                    return `<strong>${data.creator}</strong> created a myth`;
-                case 'scripture_written':
-                    return `<strong>${data.creator}</strong> wrote scripture to ${data.divine_name}`;
-                case 'creative_masterpiece':
-                    return `<strong>${data.creator}</strong> created a masterpiece`;
-                case 'birth':
-                    return `<strong>${data.child}</strong> was born`;
-                case 'death':
-                    return `<strong>${data.agent}</strong> passed away at age ${data.age}`;
-                case 'communication':
-                    return `${data.from} → ${data.to}`;
-                case 'fork_created':
-                    return `Parallel universe created: ${data.fork_id}`;
-                default:
-                    return event.type.replace(/_/g, ' ');
-            }
-        }
-
-        // World rendering
         function drawWorld() {
-            if (!worldState) return;
+            if (!worldState || !worldState.agents) return;
 
-            // Calculate cell size based on world size
-            const worldSize = Math.sqrt(worldState.agents.length > 0 ?
-                Math.max(...worldState.agents.map(a => Math.max(a.position[0], a.position[1]))) + 1 : 50);
-
-            const cellSize = Math.floor(Math.min(800 / worldSize, 20));
-
-            worldCanvas.width = worldSize * cellSize;
-            worldCanvas.height = worldSize * cellSize;
+            // Set canvas size
+            const size = 600;
+            worldCanvas.width = size;
+            worldCanvas.height = size;
 
             // Clear canvas
             ctx.fillStyle = '#0a0a0a';
-            ctx.fillRect(0, 0, worldCanvas.width, worldCanvas.height);
+            ctx.fillRect(0, 0, size, size);
+
+            // Calculate world bounds
+            const maxPos = Math.max(
+                ...worldState.agents.map(a => Math.max(a.position[0], a.position[1])),
+                50
+            );
+            const cellSize = Math.floor(size / (maxPos + 1));
 
             // Draw grid
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
             ctx.lineWidth = 1;
-
-            for (let x = 0; x <= worldSize; x++) {
+            for (let i = 0; i <= maxPos; i++) {
                 ctx.beginPath();
-                ctx.moveTo(x * cellSize, 0);
-                ctx.lineTo(x * cellSize, worldCanvas.height);
+                ctx.moveTo(i * cellSize, 0);
+                ctx.lineTo(i * cellSize, size);
                 ctx.stroke();
-            }
 
-            for (let y = 0; y <= worldSize; y++) {
                 ctx.beginPath();
-                ctx.moveTo(0, y * cellSize);
-                ctx.lineTo(worldCanvas.width, y * cellSize);
+                ctx.moveTo(0, i * cellSize);
+                ctx.lineTo(size, i * cellSize);
                 ctx.stroke();
-            }
-
-            // Draw sacred sites
-            if (worldState.sacred_sites) {
-                worldState.sacred_sites.forEach(site => {
-                    const x = site.position[0] * cellSize + cellSize / 2;
-                    const y = site.position[1] * cellSize + cellSize / 2;
-
-                    ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
-                    ctx.beginPath();
-                    ctx.arc(x, y, cellSize * 1.5, 0, Math.PI * 2);
-                    ctx.fill();
-                });
-            }
-
-            // Draw resources
-            if (worldState.resources) {
-                worldState.resources.forEach(resource => {
-                    const color = resourceColors[resource.type] || '#666';
-                    ctx.fillStyle = color;
-                    ctx.globalAlpha = resource.amount;
-
-                    ctx.fillRect(
-                        resource.position[0] * cellSize + cellSize / 4,
-                        resource.position[1] * cellSize + cellSize / 4,
-                        cellSize / 2,
-                        cellSize / 2
-                    );
-                });
-                ctx.globalAlpha = 1;
             }
 
             // Draw agents
@@ -1192,172 +916,58 @@
                 const x = agent.position[0] * cellSize + cellSize / 2;
                 const y = agent.position[1] * cellSize + cellSize / 2;
 
-                // Agent color based on emotion
-                let color = emotionColors[agent.emotion] || '#666';
+                const color = emotionColors[agent.emotion] || '#666';
 
-                // Add glow for conscious beings
+                // Glow for conscious beings
                 if (agent.consciousness_level >= 1) {
-                    ctx.shadowBlur = agent.consciousness_level * 10;
+                    ctx.shadowBlur = agent.consciousness_level * 5;
                     ctx.shadowColor = agent.consciousness_level >= 2 ? '#ffd700' : '#667eea';
                 }
 
                 ctx.fillStyle = color;
-                ctx.globalAlpha = Math.max(0.3, agent.energy);
+                ctx.globalAlpha = Math.max(0.5, agent.energy || 1);
 
                 ctx.beginPath();
-                ctx.arc(x, y, cellSize / 3, 0, Math.PI * 2);
+                ctx.arc(x, y, Math.max(3, cellSize / 4), 0, Math.PI * 2);
                 ctx.fill();
 
                 ctx.shadowBlur = 0;
                 ctx.globalAlpha = 1;
-
-                // Draw name if zoomed in enough
-                if (cellSize > 15) {
-                    ctx.fillStyle = '#fff';
-                    ctx.font = '10px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(agent.name, x, y + cellSize / 2 + 10);
-                }
             });
-        }
-
-        // Agent selection
-        worldCanvas.addEventListener('click', (e) => {
-            if (!worldState) return;
-
-            const rect = worldCanvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            // Calculate cell size
-            const worldSize = Math.sqrt(worldState.agents.length > 0 ?
-                Math.max(...worldState.agents.map(a => Math.max(a.position[0], a.position[1]))) + 1 : 50);
-            const cellSize = Math.floor(Math.min(800 / worldSize, 20));
-
-            const cellX = Math.floor(x / cellSize);
-            const cellY = Math.floor(y / cellSize);
-
-            // Find agent at position
-            const agent = worldState.agents.find(a =>
-                a.position[0] === cellX && a.position[1] === cellY
-            );
-
-            if (agent) {
-                selectedAgent = agent.id;
-                getAgentDetails(agent.id);
-            }
-        });
-
-        function displayAgentInfo(agent) {
-            document.getElementById('agent-name').textContent = agent.name;
-            document.getElementById('agent-age').textContent = agent.age;
-            document.getElementById('agent-energy').textContent = agent.energy.toFixed(2);
-            document.getElementById('agent-emotion').textContent = agent.emotion;
-            document.getElementById('agent-symbols').textContent = agent.language_symbols;
-            document.getElementById('agent-relationships').textContent = agent.relationships;
-
-            // Consciousness badge
-            const badge = document.getElementById('consciousness-badge');
-            badge.className = `consciousness-badge level-${agent.consciousness_level}`;
-            badge.textContent = ['Unawakened', 'Awakened', 'Enlightened'][agent.consciousness_level];
-
-            // Beliefs
-            const beliefsText = agent.full_beliefs ?
-                Object.keys(agent.full_beliefs).slice(0, 5).join(', ') : 'none';
-            document.getElementById('agent-beliefs').textContent = beliefsText;
-
-            // Philosophical questions
-            const questionsText = agent.philosophical_questions && agent.philosophical_questions.length > 0 ?
-                agent.philosophical_questions[0] : 'none';
-            document.getElementById('agent-questions').textContent = questionsText;
-
-            // Creative works
-            const worksList = document.getElementById('works-list');
-            worksList.innerHTML = '';
-
-            if (agent.creative_works_details && agent.creative_works_details.length > 0) {
-                agent.creative_works_details.forEach(work => {
-                    const workDiv = document.createElement('div');
-                    workDiv.className = 'work-item';
-                    workDiv.innerHTML = `
-                        <span class="work-type">${work.type}</span>
-                        <span> - ${work.appreciation} appreciations</span>
-                    `;
-                    worksList.appendChild(workDiv);
-                });
-            } else {
-                worksList.innerHTML = '<div class="work-item">No creative works yet</div>';
-            }
-
-            document.getElementById('info-panel').classList.add('active');
-        }
-
-        function closeInfoPanel() {
-            document.getElementById('info-panel').classList.remove('active');
-            selectedAgent = null;
-        }
-
-        // Narrative display
-        function displayNarrative(narrative) {
-            document.getElementById('narrative-title').textContent = narrative.title;
-
-            const chaptersDiv = document.getElementById('narrative-chapters');
-            chaptersDiv.innerHTML = '';
-
-            narrative.chapters.forEach(([title, content]) => {
-                const chapterDiv = document.createElement('div');
-                chapterDiv.className = 'chapter';
-                chapterDiv.innerHTML = `
-                    <div class="chapter-title">${title}</div>
-                    <div class="narrative-text">${content}</div>
-                `;
-                chaptersDiv.appendChild(chapterDiv);
-            });
-
-            document.getElementById('narrative-modal').classList.add('active');
-        }
-
-        function closeNarrativeModal() {
-            document.getElementById('narrative-modal').classList.remove('active');
         }
 
         // Event listeners
         document.getElementById('create-btn').addEventListener('click', createSimulation);
-        document.getElementById('start-btn').addEventListener('click', startSimulation);
-        document.getElementById('pause-btn').addEventListener('click', () => {
-            if (isPaused) {
-                fetch(`${SERVER_URL}/api/simulation/resume`, { method: 'POST' });
-                isPaused = false;
-            } else {
-                pauseSimulation();
+
+        document.getElementById('start-btn').addEventListener('click', async () => {
+            try {
+                await fetch(`${SERVER_URL}/api/simulation/start`, { method: 'POST' });
+                addEvent('Simulation started');
+            } catch (error) {
+                console.error('Failed to start simulation:', error);
             }
-            updateButtons();
-        });
-        document.getElementById('stop-btn').addEventListener('click', stopSimulation);
-
-        document.getElementById('speed-slider').addEventListener('input', (e) => {
-            const speed = parseFloat(e.target.value);
-            document.getElementById('speed-label').textContent = `${speed}x`;
-            setSpeed(speed);
         });
 
-        document.getElementById('generate-narrative').addEventListener('click', generateNarrative);
-        document.getElementById('create-fork').addEventListener('click', createFork);
-
-        // Initialize
+        // Initialize everything
         async function init() {
+            console.log('🚀 Initializing ANIMA web interface...');
+
+            updateLoadingProgress(5, 'Fetching experiments...', '');
             await fetchExperiments();
+
+            updateLoadingProgress(10, 'Connecting to server...', '');
+            updateConnectionStatus('connecting');
             connectWebSocket();
 
-            // Hide loading screen after 2 seconds
-            setTimeout(() => {
-                document.getElementById('loading').style.display = 'none';
-            }, 2000);
-
-            // Start drawing loop
-            setInterval(drawWorld, 100);
+            // Set up drawing loop
+            setInterval(() => {
+                if (isReady) {
+                    drawWorld();
+                }
+            }, 100);
         }
 
+        // Start initialization
         init();
     </script>
 </body>

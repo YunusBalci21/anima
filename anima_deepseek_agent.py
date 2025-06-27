@@ -5,6 +5,7 @@ Using local DeepSeek model for agent consciousness
 
 import numpy as np
 import random
+import os
 import json
 import torch
 from dataclasses import dataclass
@@ -19,6 +20,10 @@ import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 import re
+
+# Suppress ChromaDB telemetry errors
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
 
 # Configuration
 @dataclass

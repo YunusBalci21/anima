@@ -1,5 +1,5 @@
 """
-Enhanced World Simulation for ANIMA
+Enhanced World Simulation for ANIMA - FIXED VERSION
 Supports consciousness evolution, creative works, parallel universes, and more
 """
 
@@ -15,11 +15,14 @@ from typing import Dict, Tuple, List, Optional, Any
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor
 
+# Suppress ChromaDB telemetry errors
+import os
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
 from anima_deepseek_agent import (
-    Agent, Action, ResourceType, SimulationConfig,
+    Agent, Action, ResourceType, SimulationConfig, Emotion,
     CreativeWork, batch_think, initialize_deepseek
 )
-
 
 # Enhanced Events
 class Event:
@@ -340,8 +343,6 @@ class ForkManager:
         # Language difference
         divergence += abs(len(fork1["languages"]) - len(fork2["languages"])) * 0.05
 
-        # TODO: Add more sophisticated comparison
-
         return min(1.0, divergence)
 
 
@@ -364,7 +365,11 @@ class SimulationWorld:
 
         # Initialize DeepSeek if configured
         if self.config.use_llm:
-            initialize_deepseek(self.config)
+            try:
+                initialize_deepseek(self.config)
+            except Exception as e:
+                logging.warning(f"Failed to initialize DeepSeek: {e}")
+                self.config.use_llm = False
 
         # Thread pool for parallel processing
         self.executor = ThreadPoolExecutor(max_workers=4)
@@ -452,44 +457,50 @@ class SimulationWorld:
         """Process one simulation step with async agent thinking"""
         self.logger.debug(f"=== TICK {self.time} ===")
 
-        # 1. Agent perception phase
-        perceptions = {}
-        for agent_id, agent in self.agents.items():
-            if agent.physical_state.is_alive():
-                perceptions[agent_id] = agent.perceive(self)
+        try:
+            # 1. Agent perception phase
+            perceptions = {}
+            for agent_id, agent in self.agents.items():
+                if agent.physical_state.is_alive():
+                    perceptions[agent_id] = agent.perceive(self)
 
-        # 2. Agent thinking phase (async with batching)
-        decisions = await self._process_agent_thinking(perceptions)
+            # 2. Agent thinking phase (async with batching)
+            decisions = await self._process_agent_thinking(perceptions)
 
-        # 3. Action execution phase
-        self._process_agent_actions(decisions)
+            # 3. Action execution phase
+            self._process_agent_actions(decisions)
 
-        # 4. Environmental updates
-        self._update_environment()
+            # 4. Environmental updates
+            self._update_environment()
 
-        # 5. Cultural emergence check
-        self._check_cultural_emergence()
+            # 5. Cultural emergence check
+            self._check_cultural_emergence()
 
-        # 6. Consciousness evolution check
-        self._check_consciousness_evolution()
+            # 6. Consciousness evolution check
+            self._check_consciousness_evolution()
 
-        # 7. Creative appreciation phase
-        self._process_creative_appreciation()
+            # 7. Creative appreciation phase
+            self._process_creative_appreciation()
 
-        # 8. Process events
-        current_events = self.events.process()
-        for event in current_events:
-            self.logger.info(f"Event: {event.type} - {event.data}")
+            # 8. Process events
+            current_events = self.events.process()
+            for event in current_events:
+                self.logger.info(f"Event: {event.type} - {event.data}")
 
-        # 9. Check for fork conditions
-        if self.config.use_llm and self.time % 1000 == 0 and self.time > 0:
-            self._check_fork_conditions()
+            # 9. Check for fork conditions
+            if self.config.use_llm and self.time % 1000 == 0 and self.time > 0:
+                self._check_fork_conditions()
 
-        # 10. Chronicle major events
-        if self.time % 100 == 0:
-            self._chronicle_history()
+            # 10. Chronicle major events
+            if self.time % 100 == 0:
+                self._chronicle_history()
 
-        self.time += 1
+            self.time += 1
+
+        except Exception as e:
+            self.logger.error(f"Error in tick: {e}")
+            import traceback
+            traceback.print_exc()
 
     async def _process_agent_thinking(self, perceptions: Dict) -> Dict:
         """Process agent thinking with batching for efficiency"""
@@ -509,7 +520,11 @@ class SimulationWorld:
 
             # Process unawakened with rule-based thinking
             for agent in unawakened:
-                decisions[agent.id] = agent._simulate_thinking(perceptions[agent.id])
+                try:
+                    decisions[agent.id] = agent._simulate_thinking(perceptions[agent.id])
+                except Exception as e:
+                    self.logger.error(f"Error in unawakened thinking for {agent.id}: {e}")
+                    decisions[agent.id] = {"action": Action.CONTEMPLATE, "target": None, "reasoning": "error"}
 
             # Process awakened in batches with DeepSeek
             if awakened:
@@ -518,13 +533,23 @@ class SimulationWorld:
                     batch = awakened[i:i + batch_size]
                     batch_contexts = {a.id: perceptions[a.id] for a in batch}
 
-                    batch_decisions = await batch_think(batch, batch_contexts)
-                    decisions.update(batch_decisions)
+                    try:
+                        batch_decisions = await batch_think(batch, batch_contexts)
+                        decisions.update(batch_decisions)
+                    except Exception as e:
+                        self.logger.error(f"Error in batch thinking: {e}")
+                        # Fallback to rule-based
+                        for agent in batch:
+                            decisions[agent.id] = agent._simulate_thinking(perceptions[agent.id])
         else:
             # All rule-based
             for agent_id, agent in self.agents.items():
                 if agent.physical_state.is_alive():
-                    decisions[agent_id] = agent._simulate_thinking(perceptions[agent_id])
+                    try:
+                        decisions[agent_id] = agent._simulate_thinking(perceptions[agent_id])
+                    except Exception as e:
+                        self.logger.error(f"Error in rule-based thinking for {agent_id}: {e}")
+                        decisions[agent_id] = {"action": Action.CONTEMPLATE, "target": None, "reasoning": "error"}
 
         return decisions
 
@@ -538,46 +563,50 @@ class SimulationWorld:
             action = decision.get("action")
             target = decision.get("target")
 
-            if action == Action.MOVE:
-                self._handle_move(agent, target)
+            try:
+                if action == Action.MOVE:
+                    self._handle_move(agent, target)
 
-            elif action == Action.GATHER:
-                self._handle_gather(agent, target)
+                elif action == Action.GATHER:
+                    self._handle_gather(agent, target)
 
-            elif action == Action.COMMUNICATE:
-                if target in self.agents:
-                    self._handle_communication(agent, self.agents[target], decision.get("message", ""))
+                elif action == Action.COMMUNICATE:
+                    if target in self.agents:
+                        self._handle_communication(agent, self.agents[target], decision.get("message", ""))
 
-            elif action == Action.CREATE_SYMBOL:
-                self._handle_symbol_creation(agent)
+                elif action == Action.CREATE_SYMBOL:
+                    self._handle_symbol_creation(agent)
 
-            elif action == Action.CREATE_ART:
-                self._handle_art_creation(agent, decision.get("creative_output"))
+                elif action == Action.CREATE_ART:
+                    self._handle_art_creation(agent, decision.get("creative_output"))
 
-            elif action == Action.COMPOSE_MUSIC:
-                self._handle_music_creation(agent, decision.get("creative_output"))
+                elif action == Action.COMPOSE_MUSIC:
+                    self._handle_music_creation(agent, decision.get("creative_output"))
 
-            elif action == Action.WRITE_SCRIPTURE:
-                self._handle_scripture_creation(agent, decision.get("creative_output"))
+                elif action == Action.WRITE_SCRIPTURE:
+                    self._handle_scripture_creation(agent, decision.get("creative_output"))
 
-            elif action == Action.CONTEMPLATE:
-                self._handle_contemplation(agent)
+                elif action == Action.CONTEMPLATE:
+                    self._handle_contemplation(agent)
 
-            elif action == Action.MEDITATE:
-                self._handle_meditation(agent)
+                elif action == Action.MEDITATE:
+                    self._handle_meditation(agent)
 
-            elif action == Action.QUESTION_REALITY:
-                self._handle_reality_questioning(agent)
+                elif action == Action.QUESTION_REALITY:
+                    self._handle_reality_questioning(agent)
 
-            elif action == Action.REPRODUCE:
-                if target in self.agents:
-                    self._handle_reproduction(agent, self.agents[target])
+                elif action == Action.REPRODUCE:
+                    if target in self.agents:
+                        self._handle_reproduction(agent, self.agents[target])
 
-            elif action == Action.TEACH:
-                self._handle_teaching(agent)
+                elif action == Action.TEACH:
+                    self._handle_teaching(agent)
 
-            elif action == Action.WORSHIP:
-                self._handle_worship(agent)
+                elif action == Action.WORSHIP:
+                    self._handle_worship(agent)
+
+            except Exception as e:
+                self.logger.error(f"Error processing action {action} for {agent_id}: {e}")
 
     def _handle_move(self, agent: Agent, target_pos: Optional[Tuple[int, int]]):
         """Handle agent movement"""
@@ -914,11 +943,14 @@ class SimulationWorld:
         # Update agents
         dead_agents = []
         for agent_id, agent in self.agents.items():
-            agent.update(self)
+            try:
+                agent.update(self)
 
-            # Check for death
-            if not agent.physical_state.is_alive():
-                dead_agents.append(agent_id)
+                # Check for death
+                if not agent.physical_state.is_alive():
+                    dead_agents.append(agent_id)
+            except Exception as e:
+                self.logger.error(f"Error updating agent {agent_id}: {e}")
 
         # Process deaths
         for agent_id in dead_agents:
@@ -1086,59 +1118,77 @@ class SimulationWorld:
 
     def get_world_state(self) -> Dict:
         """Get current world state for visualization"""
-        # Convert resources to JSON-serializable format
-        serializable_resources = []
-        for resource in self.resources.resources.values():
-            serializable_resources.append({
-                "type": resource["type"].value,  # Convert enum to string
-                "amount": resource["amount"],
-                "position": resource["position"]
-            })
+        try:
+            # Convert resources to JSON-serializable format
+            serializable_resources = []
+            for resource in self.resources.resources.values():
+                serializable_resources.append({
+                    "type": resource["type"].value,  # Convert enum to string
+                    "amount": resource["amount"],
+                    "position": resource["position"]
+                })
 
-        # Convert agents to dict format
-        serializable_agents = []
-        for agent in self.agents.values():
-            agent_dict = agent.to_dict()
-            # Ensure all enum values are converted to strings
-            if "emotion" in agent_dict:
-                if hasattr(agent_dict["emotion"], "value"):
-                    agent_dict["emotion"] = agent_dict["emotion"].value
-            serializable_agents.append(agent_dict)
+            # Convert agents to dict format
+            serializable_agents = []
+            for agent in self.agents.values():
+                agent_dict = agent.to_dict()
+                # Ensure all enum values are converted to strings
+                if "emotion" in agent_dict:
+                    if hasattr(agent_dict["emotion"], "value"):
+                        agent_dict["emotion"] = agent_dict["emotion"].value
+                serializable_agents.append(agent_dict)
 
-        # Convert events to serializable format
-        serializable_events = []
-        for event in self.events.get_recent(20):
-            event_dict = {"type": event.type, "data": event.data}
-            # Make sure event data doesn't contain enum objects
-            if isinstance(event_dict["data"], dict):
-                for key, value in event_dict["data"].items():
-                    if hasattr(value, "value"):  # It's an enum
-                        event_dict["data"][key] = value.value
-            serializable_events.append(event_dict)
+            # Convert events to serializable format
+            serializable_events = []
+            for event in self.events.get_recent(20):
+                event_dict = {"type": event.type, "data": event.data}
+                # Make sure event data doesn't contain enum objects
+                if isinstance(event_dict["data"], dict):
+                    for key, value in event_dict["data"].items():
+                        if hasattr(value, "value"):  # It's an enum
+                            event_dict["data"][key] = value.value
+                serializable_events.append(event_dict)
 
-        return {
-            "time": self.time,
-            "agents": serializable_agents,
-            "resources": serializable_resources,
-            "cultures": self.cultures,
-            "languages": self.languages,
-            "myths": self.myths[-10:],  # Last 10 myths
-            "events": serializable_events,
-            "creative_works": {
-                "total": len(self.creative_gallery.all_works),
-                "by_type": {
-                    t: len(works) for t, works in self.creative_gallery.works_by_type.items()
+            return {
+                "time": self.time,
+                "agents": serializable_agents,
+                "resources": serializable_resources,
+                "cultures": self.cultures,
+                "languages": self.languages,
+                "myths": self.myths[-10:],  # Last 10 myths
+                "events": serializable_events,
+                "creative_works": {
+                    "total": len(self.creative_gallery.all_works),
+                    "by_type": {
+                        t: len(works) for t, works in self.creative_gallery.works_by_type.items()
+                    },
+                    "masterpieces": len(self.creative_gallery.masterpieces)
                 },
-                "masterpieces": len(self.creative_gallery.masterpieces)
-            },
-            "consciousness_stats": {
-                "awakened": sum(1 for a in self.agents.values() if a.consciousness_level >= 1),
-                "enlightened": sum(1 for a in self.agents.values() if a.consciousness_level >= 2),
-                "total": len(self.agents)
-            },
-            "sacred_sites": self.resources.sacred_sites,
-            "parallel_universes": len(self.fork_manager.forks)
-        }
+                "consciousness_stats": {
+                    "awakened": sum(1 for a in self.agents.values() if a.consciousness_level >= 1),
+                    "enlightened": sum(1 for a in self.agents.values() if a.consciousness_level >= 2),
+                    "total": len(self.agents)
+                },
+                "sacred_sites": self.resources.sacred_sites,
+                "parallel_universes": len(self.fork_manager.forks)
+            }
+
+        except Exception as e:
+            self.logger.error(f"Error getting world state: {e}")
+            # Return minimal state on error
+            return {
+                "time": self.time,
+                "agents": [],
+                "resources": [],
+                "cultures": {},
+                "languages": {},
+                "myths": [],
+                "events": [],
+                "creative_works": {"total": 0, "by_type": {}, "masterpieces": 0},
+                "consciousness_stats": {"awakened": 0, "enlightened": 0, "total": 0},
+                "sacred_sites": [],
+                "parallel_universes": 0
+            }
 
     async def run(self, num_ticks: int = 1000):
         """Run simulation for specified ticks"""
@@ -1243,38 +1293,6 @@ async def create_and_run_world(config: SimulationConfig = None, num_ticks: int =
 def run_simulation(config: SimulationConfig = None, num_ticks: int = 1000):
     """Synchronous wrapper for running simulation"""
     asyncio.run(create_and_run_world(config, num_ticks))
-
-
-# Example experiments
-def run_consciousness_experiment():
-    """Run an experiment focused on consciousness evolution"""
-    config = SimulationConfig(
-        world_size=(40, 40),
-        initial_agents=30,
-        resource_spawn_rate=0.08,
-        llm_awakening_age=50,  # Agents awaken earlier
-        llm_awakening_wisdom=3,  # Lower threshold
-        use_llm=True
-    )
-
-    run_simulation(config, 2000)
-
-
-def run_creative_explosion_experiment():
-    """Run an experiment focused on creative output"""
-    config = SimulationConfig(
-        world_size=(50, 50),
-        initial_agents=50,
-        resource_spawn_rate=0.15,  # More resources
-        use_llm=True
-    )
-
-    # Modify initial agents to be more creative
-    world = SimulationWorld(config)
-    for agent in world.agents.values():
-        agent.personality_vector[2] += 0.4  # Boost creativity
-
-    asyncio.run(world.run(1500))
 
 
 if __name__ == "__main__":

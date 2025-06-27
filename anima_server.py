@@ -1,5 +1,5 @@
 """
-ANIMA Real-time Server
+ANIMA Real-time Server - FIXED VERSION with proper imports
 Connects the enhanced simulation to web interface via WebSocket
 """
 
@@ -19,8 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from world_sim import SimulationWorld, SimulationConfig
-from anima_deepseek_agent import initialize_deepseek
-from narrative_synthesizer import NarrativeSynthesizer, NARRATIVE_STYLES
+from anima_deepseek_agent import initialize_deepseek, Emotion, Action, ResourceType
 
 def safe_json_serializer(obj):
     """Safe JSON serializer that handles enums and other problematic objects"""
@@ -35,11 +34,10 @@ def safe_json_serializer(obj):
     elif hasattr(obj, 'to_dict'):
         return obj.to_dict()
     elif hasattr(obj, '__dict__'):
-        # Convert object to dict, handling nested enums
         result = {}
         for key, value in obj.__dict__.items():
             try:
-                json.dumps(value)  # Test if it's serializable
+                json.dumps(value)
                 result[key] = value
             except (TypeError, ValueError):
                 if isinstance(value, Enum):
@@ -50,7 +48,7 @@ def safe_json_serializer(obj):
                     result[key] = str(value)
         return result
     else:
-        return str(obj)  # Convert to string as fallback
+        return str(obj)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -68,31 +66,105 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # Global state
 class SimulationManager:
     def __init__(self):
         self.world: Optional[SimulationWorld] = None
-        self.narrator: Optional[NarrativeSynthesizer] = None
         self.config: Optional[SimulationConfig] = None
         self.is_running: bool = False
         self.is_paused: bool = False
         self.speed_multiplier: float = 1.0
         self.connected_clients: list = []
         self.simulation_task: Optional[asyncio.Task] = None
-        self.state_history: list = []  # Store recent states
+        self.state_history: list = []
         self.max_history: int = 100
+        self.model_loading: bool = False
+        self.model_loaded: bool = False
+        self.model_error: Optional[str] = None
 
     async def initialize_simulation(self, config: SimulationConfig):
         """Initialize a new simulation"""
         self.config = config
-        self.world = SimulationWorld(config)
-        self.narrator = NarrativeSynthesizer(self.world, config)
+
+        # Create world without LLM first for faster startup
+        temp_config = SimulationConfig(
+            world_size=config.world_size,
+            initial_agents=config.initial_agents,
+            resource_spawn_rate=config.resource_spawn_rate,
+            time_per_tick=config.time_per_tick,
+            use_llm=False  # Start without LLM
+        )
+
+        self.world = SimulationWorld(temp_config)
         self.is_running = False
         self.is_paused = False
         self.state_history = []
 
-        logger.info(f"Initialized simulation with {config.initial_agents} agents")
+        logger.info(f"Initialized simulation with {config.initial_agents} agents (LLM loading separately)")
+
+        # Load LLM in background if requested
+        if config.use_llm:
+            asyncio.create_task(self._load_llm_async(config))
+
+    async def _load_llm_async(self, config: SimulationConfig):
+        """Load LLM model asynchronously"""
+        self.model_loading = True
+        self.model_error = None
+
+        try:
+            logger.info("🧠 Starting DeepSeek model loading in background...")
+            await self.broadcast_message({
+                "type": "status",
+                "message": "Loading DeepSeek consciousness engine...",
+                "loading": True
+            })
+
+            # Load model in thread to avoid blocking
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, self._load_model_sync, config)
+
+            # Update world config to use LLM
+            if self.world:
+                self.world.config.use_llm = True
+                self.world.config.model_name = config.model_name
+                self.world.config.temperature = config.temperature
+                self.world.config.llm_awakening_age = config.llm_awakening_age
+                self.world.config.llm_awakening_wisdom = config.llm_awakening_wisdom
+
+                # Update existing agents to potentially use LLM
+                for agent in self.world.agents.values():
+                    agent.config = self.world.config
+                    agent.check_consciousness_evolution()
+
+            self.model_loaded = True
+            self.model_loading = False
+
+            logger.info("✅ DeepSeek model loaded successfully!")
+            await self.broadcast_message({
+                "type": "status",
+                "message": "DeepSeek consciousness engine ready!",
+                "model_loaded": True,
+                "loading": False
+            })
+
+        except Exception as e:
+            self.model_error = str(e)
+            self.model_loading = False
+            logger.error(f"❌ Failed to load DeepSeek model: {e}")
+            await self.broadcast_message({
+                "type": "status",
+                "message": f"LLM loading failed: {str(e)[:100]}...",
+                "error": True,
+                "loading": False
+            })
+
+    def _load_model_sync(self, config: SimulationConfig):
+        """Synchronous model loading"""
+        try:
+            initialize_deepseek(config)
+        except Exception as e:
+            logger.error(f"Model loading error: {e}")
+            raise
 
     async def start_simulation(self):
         """Start the simulation loop"""
@@ -132,6 +204,13 @@ class SimulationManager:
                     # Get current state
                     state = self.world.get_world_state()
 
+                    # Add model status to state
+                    state["model_status"] = {
+                        "loading": self.model_loading,
+                        "loaded": self.model_loaded,
+                        "error": self.model_error
+                    }
+
                     # Add to history
                     self.state_history.append(state)
                     if len(self.state_history) > self.max_history:
@@ -140,41 +219,16 @@ class SimulationManager:
                     # Broadcast to all connected clients
                     await self.broadcast_state(state)
 
-                    # Generate narrative periodically
-                    if self.world.time % 500 == 0 and self.world.time > 0:
-                        asyncio.create_task(self._generate_and_broadcast_narrative())
-
                     # Sleep based on speed multiplier
                     await asyncio.sleep(self.config.time_per_tick / self.speed_multiplier)
 
                 except Exception as e:
                     logger.error(f"Error in simulation loop: {e}")
+                    import traceback
+                    traceback.print_exc()
                     await asyncio.sleep(1)
             else:
                 await asyncio.sleep(0.1)
-
-    async def _generate_and_broadcast_narrative(self):
-        """Generate narrative and broadcast to clients"""
-        if self.narrator:
-            try:
-                # Choose random style
-                import random
-                style = random.choice(list(NARRATIVE_STYLES.keys()))
-
-                # Generate narrative
-                story = await self.narrator.generate_narrative(style)
-
-                # Broadcast to clients
-                narrative_data = {
-                    "type": "narrative",
-                    "story": story.to_dict(),
-                    "time": self.world.time
-                }
-
-                await self.broadcast_message(narrative_data)
-
-            except Exception as e:
-                logger.error(f"Error generating narrative: {e}")
 
     async def broadcast_state(self, state: Dict):
         """Broadcast world state to all connected clients"""
@@ -191,7 +245,6 @@ class SimulationManager:
 
         for client in self.connected_clients:
             try:
-                # Use safe JSON serializer
                 safe_message = json.loads(json.dumps(message, default=safe_json_serializer))
                 await client.send_text(json.dumps(safe_message))
             except Exception as e:
@@ -200,7 +253,8 @@ class SimulationManager:
 
         # Remove disconnected clients
         for client in disconnected:
-            self.connected_clients.remove(client)
+            if client in self.connected_clients:
+                self.connected_clients.remove(client)
 
     def add_client(self, websocket: WebSocket):
         """Add a new connected client"""
@@ -213,7 +267,6 @@ class SimulationManager:
             self.connected_clients.remove(websocket)
         logger.info(f"Client disconnected. Total clients: {len(self.connected_clients)}")
 
-
 # Create simulation manager
 sim_manager = SimulationManager()
 
@@ -222,9 +275,7 @@ static_dir = "static"
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-
 # API Routes
-
 @app.get("/")
 async def root():
     """Serve the main HTML page"""
@@ -233,7 +284,6 @@ async def root():
         return FileResponse(html_path)
     else:
         return {"message": "ANIMA - The Emergent Self Engine", "status": "ready"}
-
 
 @app.post("/api/simulation/create")
 async def create_simulation(config: dict):
@@ -265,7 +315,6 @@ async def create_simulation(config: dict):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
 @app.post("/api/simulation/start")
 async def start_simulation():
     """Start the simulation"""
@@ -275,13 +324,11 @@ async def start_simulation():
     await sim_manager.start_simulation()
     return {"status": "success", "message": "Simulation started"}
 
-
 @app.post("/api/simulation/pause")
 async def pause_simulation():
     """Pause the simulation"""
     await sim_manager.pause_simulation()
     return {"status": "success", "message": "Simulation paused"}
-
 
 @app.post("/api/simulation/resume")
 async def resume_simulation():
@@ -289,13 +336,11 @@ async def resume_simulation():
     await sim_manager.resume_simulation()
     return {"status": "success", "message": "Simulation resumed"}
 
-
 @app.post("/api/simulation/stop")
 async def stop_simulation():
     """Stop the simulation"""
     await sim_manager.stop_simulation()
     return {"status": "success", "message": "Simulation stopped"}
-
 
 @app.post("/api/simulation/speed")
 async def set_simulation_speed(speed: dict):
@@ -304,7 +349,6 @@ async def set_simulation_speed(speed: dict):
     sim_manager.speed_multiplier = max(0.1, min(10.0, multiplier))
     return {"status": "success", "speed": sim_manager.speed_multiplier}
 
-
 @app.get("/api/simulation/state")
 async def get_simulation_state():
     """Get current simulation state"""
@@ -312,150 +356,12 @@ async def get_simulation_state():
         raise HTTPException(status_code=400, detail="No simulation running")
 
     state = sim_manager.world.get_world_state()
+    state["model_status"] = {
+        "loading": sim_manager.model_loading,
+        "loaded": sim_manager.model_loaded,
+        "error": sim_manager.model_error
+    }
     return state
-
-
-@app.get("/api/simulation/history")
-async def get_simulation_history(limit: int = 10):
-    """Get recent simulation history"""
-    history = sim_manager.state_history[-limit:]
-    return {"history": history, "total": len(sim_manager.state_history)}
-
-
-@app.post("/api/simulation/fork")
-async def create_fork(fork_params: dict):
-    """Create a parallel universe fork"""
-    if not sim_manager.world:
-        raise HTTPException(status_code=400, detail="No simulation running")
-
-    fork_name = fork_params.get("name", f"fork_{sim_manager.world.time}")
-    chaos_factor = fork_params.get("chaos_factor", 0.1)
-
-    fork_id = sim_manager.world.fork_manager.create_fork(
-        sim_manager.world,
-        fork_name,
-        chaos_factor
-    )
-
-    return {
-        "status": "success",
-        "fork_id": fork_id,
-        "message": f"Created parallel universe: {fork_id}"
-    }
-
-
-@app.get("/api/forks")
-async def get_forks():
-    """Get all parallel universe forks"""
-    if not sim_manager.world:
-        return {"forks": []}
-
-    forks = []
-    for fork_id, fork_state in sim_manager.world.fork_manager.forks.items():
-        forks.append({
-            "id": fork_id,
-            "population": len(fork_state["agents"]),
-            "time_created": fork_state["time"]
-        })
-
-    return {"forks": forks}
-
-
-@app.post("/api/narrative/generate")
-async def generate_narrative(params: dict):
-    """Generate a narrative on demand"""
-    if not sim_manager.narrator:
-        raise HTTPException(status_code=400, detail="No simulation running")
-
-    style = params.get("style", "mythological")
-    if style not in NARRATIVE_STYLES:
-        raise HTTPException(status_code=400, detail=f"Unknown style: {style}")
-
-    try:
-        story = await sim_manager.narrator.generate_narrative(style)
-        return {
-            "status": "success",
-            "narrative": story.to_dict()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/narrative/styles")
-async def get_narrative_styles():
-    """Get available narrative styles"""
-    styles = []
-    for name, style in NARRATIVE_STYLES.items():
-        styles.append({
-            "name": name,
-            "tone": style.tone,
-            "perspective": style.perspective
-        })
-    return {"styles": styles}
-
-
-@app.get("/api/agents/{agent_id}")
-async def get_agent_details(agent_id: str):
-    """Get detailed information about a specific agent"""
-    if not sim_manager.world:
-        raise HTTPException(status_code=400, detail="No simulation running")
-
-    if agent_id not in sim_manager.world.agents:
-        raise HTTPException(status_code=404, detail="Agent not found")
-
-    agent = sim_manager.world.agents[agent_id]
-
-    # Get detailed info
-    details = agent.to_dict()
-    details.update({
-        "memory_recent": [m for m in agent.memory.get_recent(10)],
-        "creative_works_details": [
-            {
-                "type": w.work_type,
-                "created_at": w.created_at,
-                "appreciation": w.appreciation_count,
-                "content_preview": str(w.content)[:200]
-            }
-            for w in agent.creative_works[-5:]
-        ],
-        "full_beliefs": dict(agent.beliefs.beliefs),
-        "myths": agent.beliefs.myths[-3:],
-        "personality_traits": agent._describe_personality()
-    })
-
-    return details
-
-
-@app.get("/api/creative-works")
-async def get_creative_works(work_type: Optional[str] = None, limit: int = 20):
-    """Get creative works from the gallery"""
-    if not sim_manager.world:
-        raise HTTPException(status_code=400, detail="No simulation running")
-
-    gallery = sim_manager.world.creative_gallery
-
-    if work_type:
-        works = gallery.works_by_type.get(work_type, [])
-    else:
-        works = gallery.all_works
-
-    # Sort by appreciation
-    sorted_works = sorted(works, key=lambda w: w.appreciation_count, reverse=True)[:limit]
-
-    return {
-        "works": [
-            {
-                "creator": w.creator,
-                "type": w.work_type,
-                "appreciation": w.appreciation_count,
-                "created_at": w.created_at,
-                "content": w.content
-            }
-            for w in sorted_works
-        ],
-        "total": len(works)
-    }
-
 
 @app.get("/api/experiments")
 async def get_experiments():
@@ -515,9 +421,38 @@ async def get_experiments():
             }
         }
     }
-
     return experiments
 
+@app.get("/api/agents/{agent_id}")
+async def get_agent_details(agent_id: str):
+    """Get detailed information about a specific agent"""
+    if not sim_manager.world:
+        raise HTTPException(status_code=400, detail="No simulation running")
+
+    if agent_id not in sim_manager.world.agents:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    agent = sim_manager.world.agents[agent_id]
+
+    # Get detailed info
+    details = agent.to_dict()
+    details.update({
+        "memory_recent": [str(m) for m in agent.memory.get_recent(10)],
+        "creative_works_details": [
+            {
+                "type": w.work_type,
+                "created_at": w.created_at,
+                "appreciation": w.appreciation_count,
+                "content_preview": str(w.content)[:200]
+            }
+            for w in agent.creative_works[-5:]
+        ],
+        "full_beliefs": dict(agent.beliefs.beliefs),
+        "myths": agent.beliefs.myths[-3:],
+        "personality_traits": agent._describe_personality()
+    })
+
+    return details
 
 # WebSocket endpoint
 @app.websocket("/ws")
@@ -531,8 +466,12 @@ async def websocket_endpoint(websocket: WebSocket):
         if sim_manager.world:
             try:
                 state = sim_manager.world.get_world_state()
+                state["model_status"] = {
+                    "loading": sim_manager.model_loading,
+                    "loaded": sim_manager.model_loaded,
+                    "error": sim_manager.model_error
+                }
 
-                # Clean the state data to ensure JSON serialization
                 clean_state = json.loads(json.dumps(state, default=safe_json_serializer))
 
                 message = {
@@ -544,8 +483,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_text(json.dumps(message, default=safe_json_serializer))
 
             except Exception as e:
-                # If there's still an error, send a minimal state
-                logger.error(f"Error sending state: {e}")
+                logger.error(f"Error sending initial state: {e}")
+                # Send minimal state on error
                 minimal_state = {
                     "time": sim_manager.world.time if sim_manager.world else 0,
                     "agents": [],
@@ -554,10 +493,11 @@ async def websocket_endpoint(websocket: WebSocket):
                     "languages": {},
                     "myths": [],
                     "events": [],
-                    "creative_works": {"total": 0, "by_type": {}, "masterpieces": 0},
-                    "consciousness_stats": {"awakened": 0, "enlightened": 0, "total": 0},
-                    "sacred_sites": [],
-                    "parallel_universes": 0
+                    "model_status": {
+                        "loading": sim_manager.model_loading,
+                        "loaded": sim_manager.model_loaded,
+                        "error": sim_manager.model_error
+                    }
                 }
 
                 await websocket.send_text(json.dumps({
@@ -568,16 +508,19 @@ async def websocket_endpoint(websocket: WebSocket):
 
         # Keep connection alive
         while True:
-            data = await websocket.receive_text()
-            if data == "ping":
-                await websocket.send_text("pong")
+            try:
+                data = await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
+                if data == "ping":
+                    await websocket.send_text("pong")
+            except asyncio.TimeoutError:
+                # Send ping if no message received
+                await websocket.send_text("ping")
 
     except WebSocketDisconnect:
         sim_manager.remove_client(websocket)
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
         sim_manager.remove_client(websocket)
-
 
 # Health check
 @app.get("/api/health")
@@ -587,42 +530,30 @@ async def health_check():
         "status": "healthy",
         "simulation_running": sim_manager.is_running,
         "connected_clients": len(sim_manager.connected_clients),
-        "current_time": sim_manager.world.time if sim_manager.world else 0
+        "current_time": sim_manager.world.time if sim_manager.world else 0,
+        "model_status": {
+            "loading": sim_manager.model_loading,
+            "loaded": sim_manager.model_loaded,
+            "error": sim_manager.model_error
+        }
     }
 
-def json_serializer(obj):
-    """Custom JSON serializer to handle enum objects and other non-serializable types"""
-    if isinstance(obj, Enum):
-        return obj.value
-    elif hasattr(obj, 'to_dict'):
-        return obj.to_dict()
-    elif isinstance(obj, tuple):
-        return list(obj)
-    elif isinstance(obj, set):
-        return list(obj)
-    elif hasattr(obj, '__dict__'):
-        return obj.__dict__
-    else:
-        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
-
-
-# Startup event
+# Startup event - SIMPLIFIED
 @app.on_event("startup")
 async def startup_event():
-    """Initialize on startup"""
-    logger.info("ANIMA Server starting up...")
+    """Initialize on startup - without heavy model loading"""
+    logger.info("🚀 ANIMA Server starting up...")
 
-    # Create default simulation
+    # Create default simulation WITHOUT LLM for fast startup
     default_config = SimulationConfig(
         world_size=(50, 50),
         initial_agents=20,
         resource_spawn_rate=0.1,
-        use_llm=True
+        use_llm=True  # Will load in background
     )
 
     await sim_manager.initialize_simulation(default_config)
-    logger.info("Default simulation initialized")
-
+    logger.info("✅ Server ready! LLM loading in background...")
 
 # Shutdown event
 @app.on_event("shutdown")
@@ -632,11 +563,18 @@ async def shutdown_event():
     if sim_manager.is_running:
         await sim_manager.stop_simulation()
 
-
 # Run the server
 if __name__ == "__main__":
     # Create static directory if it doesn't exist
     os.makedirs("static", exist_ok=True)
+
+    # Check for index.html
+    if not os.path.exists("static/index.html"):
+        logger.warning("⚠️  static/index.html not found! Web interface may not work.")
+
+    logger.info("🌟 Starting ANIMA Server...")
+    logger.info("📱 Open http://localhost:8000 in your browser")
+    logger.info("🧠 DeepSeek model will load in background after startup")
 
     # Run with uvicorn
     uvicorn.run(
@@ -644,5 +582,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
         log_level="info",
-        reload=True
+        reload=False  # Disable reload for stability
     )
